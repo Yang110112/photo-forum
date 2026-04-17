@@ -1,0 +1,42 @@
+.footer {
+    background-color: #1f1f1f; /* 深色背景 */
+    color: #ddd; /* 字体颜色 */
+    padding: 40px 0;
+    border-top: 1px solid #444;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.footer-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.footer-text {
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.footer-subtext {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 15px;
+}
+
+.footer-social {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.social-link {
+    color: #ddd;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.social-link:hover {
+    color: #fff;
+}

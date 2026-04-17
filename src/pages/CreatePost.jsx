@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPost } from '../api/posts';
 import { useNavigate } from 'react-router-dom';
+import '../css/CreatePost.css';
 
 export default function CreatePost() {
   const [form, setForm] = useState({ title: '', content: '' });
@@ -12,21 +13,21 @@ export default function CreatePost() {
   };
 
   return (
-      <div className="max-w-2xl mx-auto mt-10 p-6 shadow rounded">
-        <h2 className="text-xl font-bold mb-4">发布摄影作品</h2>
+      <div className="create-post-container">
+        <h2 className="create-post-title">发布摄影作品</h2>
         <input
-            className="w-full border p-2 mb-2 rounded"
+            className="create-post-input"
             placeholder="标题"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
         <textarea
-            className="w-full border p-2 mb-4 rounded h-40"
+            className="create-post-textarea"
             placeholder="内容介绍"
             value={form.content}
             onChange={(e) => setForm({ ...form, content: e.target.value })}
         />
-        <button onClick={submit} className="bg-blue-600 text-white px-4 py-2 rounded">
+        <button onClick={submit} className="create-post-button">
           发布帖子
         </button>
       </div>
