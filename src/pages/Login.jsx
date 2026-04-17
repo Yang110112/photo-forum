@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '../store/authSlice';
 import { useNavigate } from 'react-router-dom';
+import '../css/Login.css';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -14,16 +15,16 @@ export default function Login() {
   };
 
   return (
-      <div className="max-w-md mx-auto mt-20 p-6 shadow rounded">
-        <h2 className="text-xl font-bold mb-4">登录</h2>
+      <div className="login-container">
+        <h2 className="login-title">登录</h2>
         <input
-            className="w-full border p-2 mb-2 rounded"
-            placeholder="邮箱"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="login-input"
+            placeholder="用户名"
+            value={form.username}
+            onChange={(e) => setForm({ ...form, username: e.target.value })}
         />
         <input
-            className="w-full border p-2 mb-4 rounded"
+            className="login-input"
             type="password"
             placeholder="密码"
             value={form.password}
@@ -31,7 +32,7 @@ export default function Login() {
         />
         <button
             onClick={handleLogin}
-            className="bg-blue-600 text-white w-full p-2 rounded"
+            className="login-button"
         >
           登录
         </button>
