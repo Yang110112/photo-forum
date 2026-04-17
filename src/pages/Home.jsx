@@ -1,86 +1,34 @@
-import { useEffect, useState } from 'react';
-import { getPosts } from '../api/posts';
 import { Link } from 'react-router-dom';
+import '../css/Home.css';
 
-export default function Home() {
-    const [posts, setPosts] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                const res = await getPosts({ page: 1, limit: 10 });
-                // 适配 mock 数据和真实接口的两种返回格式
-                const postList = res.data.data?.data || res.data.data || [];
-                setPosts(postList);
-            } catch (err) {
-                console.error('获取帖子失败:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchPosts();
-    }, []);
-
-    if (loading) {
-        return <div className="text-center py-12 text-gray-500">加载中...</div>;
-    }
-
+export default function HomePage() {
     return (
-        <div>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">摄影作品分享</h1>
-                <Link to="/create" className="btn btn-primary">发布作品</Link>
-            </div>
+        <div className="homepage-container">
+            <header className="homepage-header">
+                <h1 className="homepage-title">摄影论坛</h1>
+                <p className="homepage-subtitle">
+                    分享你的摄影作品，结识更多摄影爱好者，发现世界的美好瞬间。
+                </p>
+                <div className="homepage-buttons">
+                    <Link to="/forum" className="btn-primary">进入论坛</Link>
+                    <Link to="/create" className="btn-secondary">发布作品</Link>
+                </div>
+            </header>
 
-            {posts.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                    <p>暂无作品，快来发布你的第一组摄影作品吧！</p>
+            <section className="homepage-features">
+                <div className="feature-card">
+                    <h3>发现</h3>
+                    <p>浏览社区中的精彩摄影作品，获取灵感与创意。</p>
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {posts.map((post) => (
-                        <div key={post._id} className="card">
-                            <Link to={`/post/${post._id}`}>
-                                <h3 className="text-xl font-bold text-gray-800 mb-2 hover:text-blue-600 transition-colors">
-                                    {post.title}
-                                </h3>
-                            </Link>
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                                {post.content}
-                            </p>
-                            <div className="flex items-center justify-between text-sm text-gray-500">
-                                <div className="flex items-center gap-2">
-                                    <img
-                                        src={post.author?.avatar || 'https://via.placeholder.com/30'}
-                                        alt={post.author?.username}
-                                        className="w-6 h-6 rounded-full"
-                                    />
-                                    <span>{post.author?.username}</span>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <span>{post.viewCount} 浏览</span>
-                                    <span>{post.likeCount} 点赞</span>
-                                </div>
-                            </div>
-                            <div className="mt-4 flex flex-wrap gap-2">
-                <span className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600">
-                  {post.category?.name}
-                </span>
-                                {post.tags?.map((tag) => (
-                                    <span
-                                        key={tag}
-                                        className="px-2 py-1 bg-blue-100 rounded-full text-xs text-blue-700"
-                                    >
-                    #{tag}
-                  </span>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                <div className="feature-card">
+                    <h3>分享</h3>
+                    <p>上传你的摄影作品，与大家交流你的拍摄技巧和故事。</p>
                 </div>
-            )}
+                <div className="feature-card">
+                    <h3>交流</h3>
+                    <p>参与话题讨论，关注摄影爱好者，结识更多朋友。</p>
+                </div>
+            </section>
         </div>
     );
 }

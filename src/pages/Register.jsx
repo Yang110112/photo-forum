@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { register } from '../api/auth';
 import { useNavigate } from 'react-router-dom';
+import '../css/Register.css';
 
 export default function Register() {
   const [form, setForm] = useState({ username: '', password: '' });
@@ -18,22 +19,32 @@ export default function Register() {
   };
 
   return (
-    <div>
-      <h1>注册</h1>
-      <form onSubmit={handleSubmit}>
+    <div className="register-container">
+      <h1 className="register-title">注册</h1>
+      <form onSubmit={handleSubmit} className="register-form">
         <input
           type="text"
           placeholder="用户名"
           value={form.username}
+          className="register-input"
           onChange={(e) => setForm({ ...form, username: e.target.value })}
         />
+        <input
+          type="email"
+          placeholder="邮箱"
+          value={form.email}
+          className="register-input"
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+        {/* 密码 */}  
         <input
           type="password"
           placeholder="密码"
           value={form.password}
+          className="register-input"
           onChange={(e) => setForm({ ...form, password: e.target.value })}
         />
-        <button type="submit">注册</button>
+        <button type="submit" className="register-button">注册</button>
       </form>
     </div>
   );
