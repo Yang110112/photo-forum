@@ -1,42 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../css/Forum.css';
-
-const mockPosts = [
-    {
-        _id: 'mock1',
-        title: '风光摄影：雪山日出',
-        content: '这是一组在雪山拍摄的日出作品，记录了壮丽的自然景观，光线变化令人叹为观止。',
-        author: { username: '摄影师小明', avatar: 'https://via.placeholder.com/30' },
-        viewCount: 1234,
-        likeCount: 89,
-        category: { name: '风光摄影' },
-        tags: ['风光', '日出', '雪山'],
-    },
-    {
-        _id: 'mock2',
-        title: '人像摄影：光影与情绪',
-        content: '一组人像作品，探讨光影对人物情绪的表达，用光线诠释内心世界的细腻变化。',
-        author: { username: '人像摄影师', avatar: 'https://via.placeholder.com/30' },
-        viewCount: 892,
-        likeCount: 67,
-        category: { name: '人像摄影' },
-        tags: ['人像', '光影'],
-    },
-    {
-        _id: 'mock3',
-        title: '街头摄影：城市的角落',
-        content: '漫步城市街头，用镜头捕捉那些被忽略的角落，记录普通人的生活瞬间与城市温度。',
-        author: { username: '街头猎人', avatar: 'https://via.placeholder.com/30' },
-        viewCount: 567,
-        likeCount: 43,
-        category: { name: '街头摄影' },
-        tags: ['街头', '城市', '纪实'],
-    },
-];
+import { getPosts } from '../api/posts'; // API 函数
 
 export default function Forum() {
-    const [posts] = useState(mockPosts);
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // 组件挂载时请求一次帖子列表
+    useEffect(() => {
+        const fetchPosts = async () => {
+            const res = await getPosts();
+            setPosts(res.data.data);
+            setLoading(false);
+        };
+        fetchPosts();
+    }, []);
+
+    if (loading) return <div>加载中...</div>;
 
     return (
         <div className="home-container">
@@ -44,10 +25,6 @@ export default function Forum() {
                 <h1 className="home-title">摄影论坛</h1>
                 <Link to="/create" className="btn-primary">发布作品</Link>
             </div>
-
-            <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '16px' }}>
-                🔧 接口未接入，当前显示模拟数据
-            </p>
 
             <div className="posts-grid">
                 {posts.map((post) => (

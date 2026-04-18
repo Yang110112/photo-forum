@@ -32,8 +32,8 @@
 
 /* 帖子网格 */
 .posts-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 两列 */
     gap: 16px;
 }
 

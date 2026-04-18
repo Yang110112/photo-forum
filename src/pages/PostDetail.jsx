@@ -10,7 +10,7 @@ export default function PostDetail() {
   useEffect(() => {
     const fetchDetail = async () => {
       const res = await getPostById(id);
-      setPost(res);
+      setPost(res.data.data);
     };
     fetchDetail();
   }, [id]);
@@ -18,9 +18,28 @@ export default function PostDetail() {
   if (!post) return <div>加载中...</div>;
 
   return (
+  <div>
+    <h1>{post.title}</h1>
+
     <div>
-      <h1>{post.title}</h1>
-      <p>{post.content}</p>
+      <img src={post.author?.avatar} alt={post.author?.username} />
+      <span>{post.author?.username}</span>
     </div>
-  );
+
+    <div>
+      <span>{post.viewCount} 浏览</span>
+      <span>{post.likeCount} 点赞</span>
+      <span>{post.commentCount} 评论</span>
+    </div>
+
+    <p>{post.content}</p>
+
+    <div>
+      <span>{post.category?.name}</span>
+      {post.tags?.map(tag => (
+        <span key={tag}>#{tag}</span>
+      ))}
+    </div>
+  </div>
+);
 }
