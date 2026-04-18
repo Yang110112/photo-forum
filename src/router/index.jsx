@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+// 路由配置
 import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Layout from '../components/Layout';
@@ -7,10 +7,9 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Home from '../pages/Home';
 import Forum from '../pages/Forum';
-
-const PostDetail = lazy(() => import('../pages/PostDetail'));
-const CreatePost = lazy(() => import('../pages/CreatePost'));
-const Profile = lazy(() => import('../pages/Profile'));
+import PostDetail from '../pages/PostDetail';
+import CreatePost from '../pages/CreatePost';
+import Profile from '../pages/Profile';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useSelector(state => state.auth);
