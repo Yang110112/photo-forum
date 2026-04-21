@@ -20,11 +20,11 @@ ForumHub 是一款基于前后端分离架构的现代化社区论坛系统，�
 
 ### 前端技术栈
 
-前端采用 React 18 作为核心框架，充分利用函数式组件和 Hooks 的优势实现高效的 UI 渲染。React Router 6 负责路由管理，采用声明式路由配置支持嵌套路由和路由守卫功能。Redux Toolkit 2.x 作为状态管理解决方案，提供标准化的状态操作模式和开发工具支持。React Query 3.x 用于服务端状态管理，自动处理数据缓存、后台刷新等常见场景。Axios 1.x 作为 HTTP 客户端，配置请求拦截器和响应拦截器统一处理认证和错误。Tailwind CSS 3.x 作为 CSS 框架，通过原子化 CSS 理念加速样式开发。Ant Design 5.x 作为 UI 组件库，提供高质量的企业级组件覆盖常见业务场景。
+前端采用 React 18 作为核心框架，充分利用函数式组件和 Hooks 的优势实现高效的 UI 渲染。React Router 6 负责路由管理，采用声明式路由配置支持嵌套路由和路由守卫功能。Redux Toolkit 2.x 作为状态管理解决方案，提供标准化的状态操作模式和开发工具支持。React Query 3.x 用于服务端状态管理，自动处理数据缓存、后台刷新等常见场景。Axios 1.x 作为 HTTP 客户端，配置请求拦截器和响应拦截器统一处理认证和错误。样式采用原生 CSS 文件按需导入的方式进行样式管理，每个组件和页面对应独立的 CSS 文件，存放在 src/css/ 目录下。
 
 ### 后端技术栈
 
-后端采用 Node.js 18.x 作为运行时环境，充分利用异步非阻塞 I/O 的优势处理高并发请求。Express 4.x 作为 Web 应用框架，提供简洁灵活的路由系统和中间件机制。Mongoose 7.x 作为 MongoDB 对象建模工具，通过 Schema 定义数据结构并提供丰富的查询 API。JSON Web Token（JWT）9.x 实现无状态身份认证，支持令牌签发和验证。bcryptjs 2.x 用于密码加密存储，采用业界标准的 bcrypt 算法保障用户密码安全。Express-Validator 6.x 提供请求参数验证功能，在控制器逻辑执行前进行数据校验。
+后端采用 Node.js作为运行时环境，充分利用异步非阻塞 I/O 的优势处理高并发请求。Express 4.x 作为 Web 应用框架，提供简洁灵活的路由系统和中间件机制。Mongoose 7.x 作为 MongoDB 对象建模工具，通过 Schema 定义数据结构并提供丰富的查询 API。JSON Web Token（JWT）9.x 实现无状态身份认证，支持令牌签发和验证。bcryptjs 2.x 用于密码加密存储，采用业界标准的 bcrypt 算法保障用户密码安全。Express-Validator 6.x 提供请求参数验证功能，在控制器逻辑执行前进行数据校验。
 
 ### 开发工具链
 
@@ -35,86 +35,77 @@ ForumHub 是一款基于前后端分离架构的现代化社区论坛系统，�
 项目采用前后端分离的 monorepo 结构，将前端和后端代码组织在统一的项目根目录下。这种结构便于统一管理和协调开发，同时也支持前后端独立部署。根目录包含项目文档、规范手册以及前后端两个子项目目录。
 
 ```
-forum-project/
+project1/
 ├── SPEC.md                 # 项目技术规范文档
 ├── TASK_MANUAL.md          # 团队任务分配手册
 ├── README.md               # 项目说明文档
 ├── backend/                # 后端项目目录
 │   ├── src/
 │   │   ├── config/         # 配置文件
-│   │   │   ├── database.js  # MongoDB连接配置
-│   │   │   └── env.js      # 环境变量配置
+│   │   │   └── database.js
 │   │   ├── controllers/    # 控制器
-│   │   │   ├── authController.js      # 认证控制器
-│   │   │   ├── userController.js     # 用户控制器
-│   │   │   ├── postController.js     # 帖子控制器
-│   │   │   ├── commentController.js  # 评论控制器
-│   │   │   ├── categoryController.js # 分类控制器
-│   │   │   └── favoriteController.js # 收藏控制器
+│   │   │   ├── authController.js
+│   │   │   ├── userController.js
+│   │   │   ├── postController.js
+│   │   │   ├── commentController.js
+│   │   │   ├── categoryController.js
+│   │   │   └── favoriteController.js
 │   │   ├── middleware/     # 中间件
-│   │   │   ├── auth.js           # JWT认证中间件
-│   │   │   ├── errorHandler.js   # 错误处理中间件
-│   │   │   ├── validator.js      # 参数验证中间件
-│   │   │   └── notFound.js       # 404处理中间件
+│   │   │   ├── auth.js
+│   │   │   ├── errorHandler.js
+│   │   │   ├── validator.js
+│   │   │   └── notFound.js
 │   │   ├── models/         # 数据模型
-│   │   │   ├── User.js           # 用户模型
-│   │   │   ├── Post.js           # 帖子模型
-│   │   │   ├── Comment.js        # 评论模型
-│   │   │   ├── Category.js       # 分类模型
-│   │   │   ├── Like.js           # 点赞模型
-│   │   │   └── Favorite.js       # 收藏模型
+│   │   │   ├── User.js
+│   │   │   ├── Post.js
+│   │   │   ├── Comment.js
+│   │   │   ├── Category.js
+│   │   │   ├── Like.js
+│   │   │   └── Favorite.js
 │   │   ├── routes/         # 路由定义
-│   │   │   ├── auth.js           # 认证路由
-│   │   │   ├── users.js          # 用户路由
-│   │   │   ├── posts.js          # 帖子路由
-│   │   │   ├── comments.js       # 评论路由
-│   │   │   ├── categories.js     # 分类路由
-│   │   │   └── favorites.js      # 收藏路由
-│   │   ├── utils/          # 工具函数
-│   │   │   ├── response.js       # 统一响应格式
-│   │   │   └── pagination.js     # 分页工具
+│   │   │   ├── auth.js
+│   │   │   ├── users.js
+│   │   │   ├── posts.js
+│   │   │   ├── comments.js
+│   │   │   ├── categories.js
+│   │   │   └── favorites.js
 │   │   └── app.js          # 应用入口
-│   ├── scripts/            # 脚本文件
+│   ├── scripts/
 │   │   └── seed.js         # 数据库初始化脚本
-│   ├── package.json        # 后端依赖配置
-│   └── .env.example        # 环境变量示例
-└── frontend/               # 前端项目目录
-    ├── public/             # 静态资源目录
+│   ├── package.json
+│   └── .env.example
+└── ui/                     # 前端项目目录
+    ├── public/
+    │   └── favicon.svg
     ├── src/
     │   ├── api/            # API请求封装
-    │   │   ├── axios.js          # Axios配置
-    │   │   ├── auth.js           # 认证API
-    │   │   ├── users.js          # 用户API
-    │   │   ├── posts.js          # 帖子API
-    │   │   ├── comments.js       # 评论API
-    │   │   ├── categories.js    # 分类API
-    │   │   └── favorites.js      # 收藏API
+    │   │   ├── axios.js
+    │   │   ├── auth.js
+    │   │   └── posts.js
     │   ├── components/     # 公共组件
-    │   │   ├── Header/          # 导航栏组件
-    │   │   ├── Footer/          # 页脚组件
-    │   │   ├── PostCard/        # 帖子卡片组件
-    │   │   └── CommentItem/     # 评论项组件
-    │   ├── pages/           # 页面组件
-    │   │   ├── Home/            # 首页
-    │   │   ├── Login/           # 登录页
-    │   │   ├── Register/       # 注册页
-    │   │   ├── PostDetail/      # 帖子详情页
-    │   │   ├── CreatePost/      # 发帖页
-    │   │   ├── UserProfile/     # 用户资料页
-    │   │   └── Favorites/       # 收藏页
-    │   ├── store/           # Redux状态管理
-    │   │   ├── store.js          # Store配置
-    │   │   ├── authSlice.js     # 认证状态
-    │   │   └── postSlice.js     # 帖子状态
-    │   ├── styles/          # 样式文件
-    │   ├── hooks/           # 自定义Hooks
-    │   ├── utils/           # 工具函数
-    │   ├── App.jsx          # 根组件
-    │   └── main.jsx        # 入口文件
-    ├── index.html          # HTML模板
-    ├── package.json         # 前端依赖配置
-    ├── vite.config.js      # Vite配置
-    └── .env.example        # 环境变量示例
+    │   │   ├── AuthLayout.jsx
+    │   │   ├── Header.jsx
+    │   │   ├── Footer.jsx
+    │   │   └── Layout.jsx
+    │   ├── css/            # 样式文件
+    │   ├── pages/          # 页面组件
+    │   │   ├── Home.jsx
+    │   │   ├── Login.jsx
+    │   │   ├── Register.jsx
+    │   │   ├── Forum.jsx
+    │   │   ├── PostDetail.jsx
+    │   │   ├── CreatePost.jsx
+    │   │   └── Profile.jsx
+    │   ├── router/
+    │   │   └── index.jsx
+    │   ├── store/
+    │   │   ├── store.js
+    │   │   └── authSlice.js
+    │   ├── App.jsx
+    │   └── main.jsx
+    ├── index.html
+    ├── package.json
+    └── vite.config.js
 ```
 
 ## 快速开始
@@ -138,10 +129,12 @@ cd forum-project
 # 安装后端依赖
 cd backend
 npm install
+cd ..
 
 # 安装前端依赖
-cd ../frontend
+cd ui
 npm install
+cd ..
 ```
 
 ### 环境配置
@@ -168,7 +161,7 @@ NODE_ENV=development
 在前端目录中，同样复制环境变量示例文件并配置 API 地址：
 
 ```bash
-cd frontend
+cd ui
 cp .env.example .env
 ```
 
@@ -200,7 +193,7 @@ npm run dev
 最后启动前端服务。前端使用 Vite 作为开发服务器，默认监听 5173 端口，并自动打开浏览器访问。
 
 ```bash
-cd frontend
+cd ui
 npm run dev
 ```
 
