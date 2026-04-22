@@ -53,3 +53,17 @@
 .btn-logout:hover {
     background-color: #dc2626; /* red-600 */
 }
+
+.nav-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid #3b82f6;
+    transition: opacity 0.2s;
+}
+
+.nav-avatar:hover {
+    opacity: 0.8;
+}
