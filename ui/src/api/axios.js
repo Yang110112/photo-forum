@@ -50,10 +50,17 @@ const allMockPosts = [
     },
 ];
 
-// 响应拦截器：如果后端没启动，返回 mock 数据
+// 响应拦截器：处理 401 未授权 + 后端未启动时返回 mock 数据
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        // 401 未授权：清除 token 并跳转登录页
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return Promise.reject(error);
+        }
+
         if (error.code === 'ERR_NETWORK' || error.code === 'ECONNREFUSED') {
             console.warn('后端服务未启动，使用 Mock 数据');
 
@@ -68,7 +75,8 @@ api.interceptors.response.use(
             if (error.config.url === '/posts' && error.config.method === 'get') {
                 return Promise.resolve({
                     data: {
-                        data: allMockPosts,
+                        status: 'success',
+                        posts: allMockPosts,
                         total: allMockPosts.length,
                         totalPages: 1,
                         currentPage: 1

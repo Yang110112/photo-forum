@@ -23,7 +23,7 @@ const categoryRoutes = require('./routes/categories');
 const favoriteRoutes = require('./routes/favorites');
 
 // 导入中间件
-const errorHandler = require('./middleware/errorHandler');
+const { errorHandler } = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
 
 // 创建Express应用
