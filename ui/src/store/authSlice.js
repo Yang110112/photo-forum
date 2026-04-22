@@ -46,7 +46,7 @@ const authSlice = createSlice({
           state.token = action.payload.token;
         })
         .addCase(fetchUserInfo.fulfilled, (state, action) => {
-          state.user = action.payload.user;
+          state.user = action.payload.data.user;
         });
   },
 });
