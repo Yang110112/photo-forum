@@ -14,9 +14,9 @@ const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 // 导入数据模型
-const User = require('../models/User');
-const Category = require('../models/Category');
-const Post = require('../models/Post');
+const User = require('../src/models/User');
+const Category = require('../src/models/Category');
+const Post = require('../src/models/Post');
 
 /**
  * 种子数据配置

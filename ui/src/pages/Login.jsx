@@ -19,9 +19,9 @@ export default function Login() {
         <h2 className="login-title">登录</h2>
         <input
             className="login-input"
-            placeholder="用户名"
-            value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
+            placeholder="邮箱"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
         <input
             className="login-input"

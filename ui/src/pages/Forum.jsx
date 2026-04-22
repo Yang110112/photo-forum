@@ -11,7 +11,7 @@ export default function Forum() {
     useEffect(() => {
         const fetchPosts = async () => {
             const res = await getPosts();
-            setPosts(res.data.data);
+            setPosts(res.data.posts || []);
             setLoading(false);
         };
         fetchPosts();

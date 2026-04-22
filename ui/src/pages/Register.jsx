@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import '../css/Register.css';
 
 export default function Register() {
-  const [form, setForm] = useState({ username: '', password: '' });
+  const [form, setForm] = useState({ username: '', email: '', password: '' });
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -14,7 +14,8 @@ export default function Register() {
       alert('注册成功，去登录');
       navigate('/login');
     } catch (err) {
-      alert('注册失败');
+      const msg = err.response?.data?.errors?.[0]?.message || err.response?.data?.message || '注册失败';
+      alert(msg);
     }
   };
 
