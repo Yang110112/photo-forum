@@ -36,7 +36,7 @@ export default function Forum() {
                         <div className="post-meta">
                             <div className="post-author">
                                 <img
-                                    src={post.author?.avatar || 'https://via.placeholder.com/30'}
+                                    src={`https://ui-avatars.com/api/?name=${post.author?.username}&background=random&color=fff`}
                                     alt={post.author?.username}
                                     className="author-avatar"
                                 />
