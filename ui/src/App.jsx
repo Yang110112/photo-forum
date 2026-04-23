@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUserInfo } from './store/authSlice';
@@ -16,17 +16,15 @@ function App() {
 
     return (
         <BrowserRouter>
-            <Suspense fallback={<div style={{ textAlign: 'center', marginTop: '40vh' }}>加载中...</div>}>
-                <Routes>
-                    {routes.map((route, i) => (
-                        <Route key={i} element={route.element}>
-                            {route.children.map((child, j) => (
-                                <Route key={j} path={child.path} element={child.element} />
-                            ))}
-                        </Route>
-                    ))}
-                </Routes>
-            </Suspense>
+            <Routes>
+                {routes.map((route, i) => (
+                    <Route key={i} element={route.element}>
+                        {route.children.map((child, j) => (
+                            <Route key={j} path={child.path} element={child.element} />
+                        ))}
+                    </Route>
+                ))}
+            </Routes>
         </BrowserRouter>
     );
 }

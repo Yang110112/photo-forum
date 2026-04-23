@@ -17,7 +17,28 @@ export default function Forum() {
         fetchPosts();
     }, []);
 
-    if (loading) return <div>加载中...</div>;
+    //加载动画
+    if (loading) return (
+    <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '60vh',
+        gap: '16px'
+    }}>
+        <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid #fde8d8',
+            borderTop: '4px solid #f97316',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite'
+        }} />
+        <p style={{ color: '#f97316', fontWeight: '600', fontSize: '0.95rem' }}>加载中...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+);
 
     return (
         <div className="home-container">
