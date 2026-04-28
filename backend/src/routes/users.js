@@ -7,6 +7,7 @@ const { body, param, query } = require('express-validator');
 const userController = require('../controllers/userController');
 const { protect, admin } = require('../middleware/auth');
 const validate = require('../middleware/validator');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -66,6 +67,18 @@ router.put(
   ],
   validate,
   userController.updatePassword
+);
+
+/**
+ * @route   POST /api/v1/users/me/avatar
+ * @desc    上传头像
+ * @access  Private
+ */
+router.post(
+  '/me/avatar',
+  protect,
+  upload.single('avatar'),
+  userController.uploadAvatar
 );
 
 /**

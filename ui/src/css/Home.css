@@ -14,7 +14,7 @@
     justify-content: center;
     text-align: center;
     overflow: hidden;
-    background: linear-gradient(160deg, #fed7aa 0%, #fb923c 30%, #f97316 55%, #ef4444 75%, #fda4af 100%);
+    background: linear-gradient(160deg, #ff9a3c 0%, #ff6b35 25%, #e8472a 50%, #c73f6b 75%, #ff8c69 100%);
 }
 
 .hero-bg {
@@ -33,21 +33,21 @@
 
 .orb1 {
     width: 500px; height: 500px;
-    background: radial-gradient(circle, #fdba74, transparent);
+    background: radial-gradient(circle, #ffb347, transparent);
     top: -100px; left: -100px;
     animation-delay: 0s;
 }
 
 .orb2 {
     width: 400px; height: 400px;
-    background: radial-gradient(circle, #fecdd3, transparent);
+    background: radial-gradient(circle, #ff8c69, transparent);
     top: 30%; right: -80px;
     animation-delay: 2s;
 }
 
 .orb3 {
     width: 350px; height: 350px;
-    background: radial-gradient(circle, #fb923c, transparent);
+    background: radial-gradient(circle, #e8472a, transparent);
     bottom: -60px; left: 30%;
     animation-delay: 4s;
 }
@@ -84,7 +84,7 @@
     line-height: 1.1;
     margin-bottom: 20px;
     letter-spacing: -0.02em;
-    text-shadow: 0 0 60px rgba(99,102,241,0.4);
+    text-shadow: 0 0 60px rgba(231,71,42,0.4);
 }
 
 .homepage-subtitle {
@@ -115,7 +115,7 @@
 
 .btn-primary {
     background: rgba(255,255,255,0.85);
-    color: #ea580c;
+    color: #c73f00;
     border: 2px solid transparent;
     padding: 14px 32px;
     border-radius: 12px;
@@ -132,7 +132,7 @@
 
 .btn-secondary {
     background: rgba(255,255,255,0.85);
-    color: #ea580c;
+    color: #c73f00;
     border: 2px solid transparent;
     padding: 14px 32px;
     border-radius: 12px;
@@ -221,7 +221,7 @@
 
 .feature-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 40px rgba(99,102,241,0.12);
+    box-shadow: 0 12px 40px rgba(232,71,42,0.12);
 }
 
 .feature-icon {
@@ -285,8 +285,8 @@
 
 .category-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(99,102,241,0.15);
-    background: linear-gradient(135deg, #ede9fe, #e0e7ff);
+    box-shadow: 0 10px 30px rgba(232,71,42,0.15);
+    background: linear-gradient(135deg, #fff0e8, #ffe4d4);
 }
 
 .category-emoji {
@@ -309,7 +309,7 @@
 /* ===== CTA ===== */
 .homepage-cta {
     position: relative;
-    background: linear-gradient(135deg, #fb923c, #f97316);
+    background: linear-gradient(135deg, #ff6b35, #e8472a);
     padding: 100px 24px;
     text-align: center;
     overflow: hidden;
@@ -326,7 +326,7 @@
     position: absolute;
     width: 600px; height: 600px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(253,164,175,0.35), transparent);
+    background: radial-gradient(circle, rgba(255,140,105,0.35), transparent);
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     filter: blur(60px);
@@ -378,7 +378,7 @@
     border-radius: 20px;
     padding: 36px 28px;
     text-align: center;
-    border: 1px solid #ede9fe;
+    border: 1px solid #ffe4d4;
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     flex: 1;
     min-width: 200px;
@@ -393,7 +393,7 @@
 .step-num {
     font-size: 2.5rem;
     font-weight: 900;
-    color: #ede9fe;
+    color: #ffe4d4;
     line-height: 1;
     margin-bottom: 14px;
     font-variant-numeric: tabular-nums;
@@ -414,7 +414,7 @@
 
 .step-arrow {
     font-size: 1.8rem;
-    color: #c4b5fd;
+    color: #ffb347;
     font-weight: 300;
     flex-shrink: 0;
 }
