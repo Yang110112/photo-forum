@@ -43,7 +43,7 @@ exports.getMe = async (req, res, next) => {
  */
 exports.updateMe = async (req, res, next) => {
   try {
-    const { username, bio, avatar } = req.body;
+    const { username, bio } = req.body;
     const userId = req.user._id;
 
     // 检查用户名是否被占用
@@ -61,7 +61,6 @@ exports.updateMe = async (req, res, next) => {
     const updateFields = {};
     if (username) updateFields.username = username;
     if (bio !== undefined) updateFields.bio = bio;
-    if (avatar) updateFields.avatar = avatar;
 
     const user = await User.findByIdAndUpdate(
       userId,
@@ -72,6 +71,33 @@ exports.updateMe = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       message: '用户信息更新成功',
+      data: { user }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    上传头像
+ */
+exports.uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return next(new AppError('请选择要上传的图片', 400));
+    }
+
+    const avatarPath = `/uploads/${req.file.filename}`;
+    
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar: avatarPath },
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: '头像上传成功',
       data: { user }
     });
   } catch (error) {

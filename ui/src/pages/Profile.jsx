@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
-import { getMe, updateMe, updatePassword } from '../api/users';
+import { getMe, updateMe, updatePassword, uploadAvatar } from '../api/users';
 import { useNavigate } from 'react-router-dom';
 import '../css/Profile.css';
 
@@ -11,16 +11,17 @@ export default function Profile() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
-  const [editForm, setEditForm] = useState({ username: '', bio: '', avatar: '' });
+  const [editForm, setEditForm] = useState({ username: '', bio: '' });
   const [pwdForm, setPwdForm] = useState({ currentPassword: '', newPassword: '' });
   const [editing, setEditing] = useState(false);
   const [msg, setMsg] = useState('');
+  const [previewAvatar, setPreviewAvatar] = useState(null);
 
   useEffect(() => {
     getMe().then(res => {
       const u = res.data.data.user;
       setUser(u);
-      setEditForm({ username: u.username, bio: u.bio || '', avatar: u.avatar || '' });
+      setEditForm({ username: u.username, bio: u.bio || '' });
     });
   }, []);
 
@@ -47,32 +48,68 @@ export default function Profile() {
     }
   };
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewAvatar(e.target.result);
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      const res = await uploadAvatar(file);
+      setUser(res.data.data.user);
+      setMsg('头像上传成功');
+    } catch (err) {
+      setMsg(err.response?.data?.message || '头像上传失败');
+      setPreviewAvatar(null);
+    }
+  };
+
   if (!authUser) return <div className="profile-tip">请先登录</div>;
   if (!user) return <div className="profile-tip">加载中...</div>;
 
-  const avatarSrc = user.avatar?.startsWith('/uploads')
-    ? `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`
-    : (user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`);
+  const avatarSrc = previewAvatar || 
+    (user.avatar?.startsWith('/uploads') 
+      ? `http://localhost:5000${user.avatar}` 
+      : (user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`));
 
   return (
     <div className="profile-container">
 
-      {/* 顶部卡片 */}
       <div className="profile-card">
-        <img
-          className="profile-avatar"
-          src={avatarSrc}
-          alt={user.username}
-          onError={(e) => {
-            e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`;
-          }}
-        />
-        <div className="profile-info">
-          <h2 className="profile-username">{user.username}</h2>
-          <p className="profile-email">{user.email}</p>
-          <p className="profile-bio">{user.bio || '这个人很懒，还没有填写简介'}</p>
-          <div className="profile-stats">
-            <span>发帖数：<strong>{user.postCount ?? 0}</strong></span>
+        <div className="profile-card-header">
+          <div className="avatar-container">
+            <img
+              className="profile-avatar"
+              src={avatarSrc}
+              alt={user.username}
+              onError={(e) => {
+                e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`;
+              }}
+            />
+            <label className="avatar-upload-btn">
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                onChange={handleAvatarChange}
+                className="avatar-input"
+              />
+              <span className="upload-icon">📷</span>
+            </label>
+          </div>
+          <div className="profile-info">
+            <h2 className="profile-username">{user.username}</h2>
+            <p className="profile-email">{user.email}</p>
+            <p className="profile-bio">{user.bio || '这个人很懒，还没有填写简介'}</p>
+            <div className="profile-stats">
+              <div className="stat-item-profile">
+                <strong>{user.postCount ?? 0}</strong>
+                <span>帖子</span>
+              </div>
+            </div>
           </div>
         </div>
         <div className="profile-card-actions">
@@ -103,13 +140,6 @@ export default function Profile() {
             value={editForm.bio}
             onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
             placeholder="介绍一下自己..."
-          />
-          <label>头像链接（URL）</label>
-          <input
-            className="profile-input"
-            value={editForm.avatar}
-            onChange={(e) => setEditForm({ ...editForm, avatar: e.target.value })}
-            placeholder="https://..."
           />
           <button className="btn-save" onClick={handleSaveProfile}>保存</button>
         </div>
