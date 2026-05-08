@@ -18,13 +18,13 @@ const ProtectedRoute = ({ children }) => {
 
 const routes = [
     {
-        element: <Layout />,
+        element: <ProtectedRoute><Layout /></ProtectedRoute>,
         children: [
             { path: '/', element: <Home /> },
             { path: '/forum', element: <Forum /> },
             { path: '/post/:id', element: <PostDetail /> },
-            { path: '/create', element: <ProtectedRoute><CreatePost /></ProtectedRoute> },
-            { path: '/profile', element: <ProtectedRoute><Profile /></ProtectedRoute> },
+            { path: '/create', element: <CreatePost /> },
+            { path: '/profile', element: <Profile /> },
             { path: '*', element: <Navigate to="/" replace /> },
         ]
     },

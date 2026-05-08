@@ -20,23 +20,19 @@ export default function Header() {
                 <nav className="nav">
                     <Link to="/" className="nav-link">首页</Link>
                     <Link to="/forum" className="nav-link">论坛</Link>
-                    {!user && (
-                        <>
-                            <Link to="/login" className="nav-link">登录</Link>
-                        </>
-                    )}
-                    <Link to="/register" className="nav-link">注册</Link>
                     {user && (
-                        <img
-                            src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`}
-                            alt={user.username}
-                            className="nav-avatar"
-                            onClick={() => navigate('/profile')}
-                            title={user.username}
-                            onError={(e) => {
-                                e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`;
-                            }}
-                        />
+                        <>
+                            <img
+                                src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`}
+                                alt={user.username}
+                                className="nav-avatar"
+                                onClick={() => navigate('/profile')}
+                                title={user.username}
+                                onError={(e) => {
+                                    e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`;
+                                }}
+                            />
+                        </>
                     )}
                 </nav>
             </div>

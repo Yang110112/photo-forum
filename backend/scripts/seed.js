@@ -1,10 +1,10 @@
 /**
- * ForumHub 数据库初始化脚本
+ * 摄影论坛 数据库初始化脚本
  *
  * 此脚本用于初始化论坛系统的测试数据，包括：
  * - 创建管理员和测试用户
- * - 创建初始分类
- * - 创建示例帖子
+ * - 创建摄影分类
+ * - 创建示例摄影帖子
  *
  * 使用方法：npm run seed
  */
@@ -29,169 +29,171 @@ const SEED_CONFIG = {
       email: 'admin@example.com',
       password: 'admin123',
       role: 'admin',
-      bio: '论坛管理员，负责维护社区秩序',
+      bio: '摄影论坛管理员，热爱摄影，负责维护社区秩序',
     },
     {
-      username: 'testuser',
+      username: 'light_hunter',
       email: 'test@example.com',
       password: 'test123',
       role: 'user',
-      bio: '这是测试用户的个人简介',
+      bio: '风光摄影爱好者，喜欢用镜头记录山川湖海',
     },
     {
-      username: 'john_doe',
-      email: 'john@example.com',
-      password: 'john123',
+      username: 'street_shot',
+      email: 'street@example.com',
+      password: 'street123',
       role: 'user',
-      bio: '热爱技术，关注前端开发',
+      bio: '街头摄影师，捕捉城市中最真实的瞬间',
     },
     {
-      username: 'jane_smith',
-      email: 'jane@example.com',
-      password: 'jane123',
+      username: 'star_traveler',
+      email: 'star@example.com',
+      password: 'star123',
       role: 'user',
-      bio: '全栈开发者，擅长 Node.js 和 React',
+      bio: '星空摄影发烧友，追逐银河和极光的脚步从未停歇',
     },
   ],
 
-  // 初始分类数据
+  // 摄影分类数据
   categories: [
     {
-      name: '技术讨论',
-      slug: 'tech',
-      description: '分享技术心得，讨论开发问题',
-      icon: 'code',
+      name: '风光摄影',
+      slug: 'landscape',
+      description: '山川大地、日出日落、自然风光作品分享',
+      icon: 'mountain',
       order: 1,
     },
     {
-      name: '前端开发',
-      slug: 'frontend',
-      description: 'HTML、CSS、JavaScript、React、Vue 等前端技术',
-      icon: 'layout',
+      name: '人像摄影',
+      slug: 'portrait',
+      description: '人物肖像、环境人像、情绪写真',
+      icon: 'user',
       order: 2,
     },
     {
-      name: '后端开发',
-      slug: 'backend',
-      description: 'Node.js、Python、Java 等后端技术',
-      icon: 'server',
+      name: '街头摄影',
+      slug: 'street',
+      description: '城市街拍、纪实影像、生活瞬间',
+      icon: 'camera',
       order: 3,
     },
     {
-      name: '数据库',
-      slug: 'database',
-      description: 'MongoDB、MySQL、PostgreSQL 等数据库相关',
-      icon: 'database',
+      name: '动物摄影',
+      slug: 'wildlife',
+      description: '野生动物、宠物、鸟类摄影作品',
+      icon: 'paw',
       order: 4,
     },
     {
-      name: 'DevOps',
-      slug: 'devops',
-      description: 'Docker、Kubernetes、CI/CD 等运维相关',
-      icon: 'cloud',
+      name: '美食摄影',
+      slug: 'food',
+      description: '美食拍摄技巧与作品分享',
+      icon: 'utensils',
       order: 5,
     },
     {
-      name: '职场交流',
-      slug: 'career',
-      description: '职业发展、面试经验、工作心得',
-      icon: 'briefcase',
+      name: '星空摄影',
+      slug: 'astrophoto',
+      description: '银河、星轨、极光、天文摄影',
+      icon: 'star',
       order: 6,
     },
     {
-      name: '资源分享',
-      slug: 'resources',
-      description: '优质教程、开源项目、开发工具推荐',
-      icon: 'gift',
+      name: '器材交流',
+      slug: 'gear',
+      description: '相机、镜头、三脚架等器材讨论与评测',
+      icon: 'settings',
       order: 7,
     },
     {
-      name: '站务公告',
-      slug: 'announcement',
-      description: '论坛公告、活动通知、系统更新',
-      icon: 'megaphone',
+      name: '后期修图',
+      slug: 'editing',
+      description: 'Lightroom、Photoshop 后期处理技巧分享',
+      icon: 'sliders',
       order: 8,
     },
   ],
 
-  // 示例帖子数据
+  // 示例摄影帖子数据
   posts: [
     {
-      title: '欢迎来到 ForumHub 论坛！',
-      content: `<h2>欢迎各位开发者加入 ForumHub 社区</h2>
-<p>这是一个专为开发者打造的交流平台，我们鼓励技术分享、经验交流和互助问答。</p>
+      title: '欢迎来到摄影论坛！',
+      content: `<h2>欢迎各位摄影爱好者加入摄影论坛</h2>
+<p>这是一个专为摄影爱好者打造的交流平台，我们鼓励作品分享、技巧交流和互助问答。</p>
 <h3>论坛功能</h3>
 <ul>
-<li>发帖回帖，支持 Markdown 语法</li>
-<li>点赞收藏，便捷管理感兴趣的内容</li>
-<li>用户关注，构建自己的技术圈</li>
-<li>分类浏览，快速找到感兴趣的话题</li>
+<li>发布摄影作品，分享拍摄心得</li>
+<li>点赞收藏，发现优秀作品</li>
+<li>评论互动，交流拍摄技巧</li>
+<li>分类浏览，探索不同摄影风格</li>
 </ul>
 <h3>社区规则</h3>
 <ol>
-<li>尊重他人，友善交流</li>
-<li>技术为先，质量优先</li>
-<li>资源共享，互惠互利</li>
+<li>尊重原创，禁止盗图</li>
+<li>友善交流，互相学习</li>
+<li>分享技巧，共同进步</li>
 <li>遵纪守法，文明发言</li>
 </ol>
-<p>期待在这里与大家共同成长！</p>`,
+<p>期待在这里看到你的精彩作品！</p>`,
       tags: ['欢迎', '公告', '新手必读'],
+      images: [
+        'https://picsum.photos/id/10/800/500',
+        'https://picsum.photos/id/15/800/500',
+      ],
       status: 'published',
     },
     {
-      title: 'React 18 新特性深度解析',
-      content: `<h2>React 18 带来了哪些新变化？</h2>
-<p>React 18 是近年来最重要的版本更新，引入了多项革命性的新特性。本文将深入解析这些新特性和它们背后的设计理念。</p>
-<h3>1. 并发渲染（Concurrent Rendering）</h3>
-<p>并发渲染是 React 18 的核心特性，它允许 React 同时准备多个版本的 UI。这意味着高优先级的更新（如用户输入）可以打断低优先级的更新（如数据加载）。</p>
-<pre><code>import { startTransition } from 'react';</code></pre>
-<h3>2. 自动批处理（Automatic Batching）</h3>
-<p>React 18 默认将所有状态更新（包括 Promise、setTimeout 等）进行批处理，减少不必要的渲染次数。</p>
-<h3>3. Suspense for Data Fetching</h3>
-<p> Suspense 不再仅限于代码分割，现在也支持数据获取场景，提供更优雅的加载状态处理方式。</p>
-<h3>4. 新的 Hooks</h3>
+      title: '日出时分的金色梯田 — 元阳哈尼梯田拍摄分享',
+      content: `<h2>元阳哈尼梯田 — 光与水的交响</h2>
+<p>上周去云南元阳拍摄了哈尼梯田的日出，清晨5点半就到达了多依树观景台等待第一缕阳光。</p>
+<h3>拍摄参数</h3>
 <ul>
-<li><strong>useId</strong>：生成稳定的唯一 ID</li>
-<li><strong>useTransition</strong>：标记非紧急更新</li>
-<li><strong>useDeferredValue</strong>：延迟更新值</li>
-<li><strong>useSyncExternalStore</strong>：外部状态订阅</li>
+<li><strong>相机</strong>：Sony A7R5</li>
+<li><strong>镜头</strong>：24-70mm f/2.8 GM II</li>
+<li><strong>光圈</strong>：f/11</li>
+<li><strong>快门</strong>：1/125s</li>
+<li><strong>ISO</strong>：200</li>
+<li><strong>滤镜</strong>：GND 0.9 渐变镜</li>
 </ul>
-<p>你开始使用 React 18 了吗？欢迎在评论区分享你的使用体验！</p>`,
-      tags: ['React', '前端', '新特性', '深度解析'],
+<h3>拍摄心得</h3>
+<p>梯田摄影最重要的是光线和天气。日出前半小时到达机位，使用渐变镜平衡天空与地面的曝光差。当阳光照射到水面时，梯田会呈现金色的光泽，这是最佳的拍摄时机。</p>
+<p>建议使用三脚架拍摄，焦段在35-70mm之间可以获得最佳构图。后期可以适当提高饱和度和对比度，让梯田的层次感更加突出。</p>
+<p>欢迎大家分享你们的风光摄影作品！</p>`,
+      tags: ['风光', '日出', '梯田', '云南'],
+      images: [
+        'https://picsum.photos/id/29/800/500',
+        'https://picsum.photos/id/36/800/500',
+        'https://picsum.photos/id/37/800/500',
+      ],
       status: 'published',
     },
     {
-      title: 'Node.js + Express + MongoDB 实战项目搭建指南',
-      content: `<h2>从零构建一个 RESTful API 项目</h2>
-<p>本文将手把手教你搭建一个完整的 Node.js 后端项目，包含用户认证、帖子管理、评论功能等核心模块。</p>
-<h3>项目结构</h3>
-<pre><code>project/
-├── src/
-│   ├── config/         # 配置文件
-│   ├── controllers/    # 控制器
-│   ├── middleware/     # 中间件
-│   ├── models/         # 数据模型
-│   ├── routes/         # 路由
-│   └── app.js          # 入口文件
-└── package.json</code></pre>
-<h3>核心依赖</h3>
+      title: '城市夜景长曝光技巧 — 如何拍出丝滑的车轨光影',
+      content: `<h2>城市夜景长曝光完全指南</h2>
+<p>夜晚的城市有着独特的魅力，车水马龙的灯光拖曳出绚丽的光轨。本文分享我在城市夜景长曝光方面的一些经验。</p>
+<h3>必备器材</h3>
 <ul>
-<li>express：Web 框架</li>
-<li>mongoose：MongoDB ORM</li>
-<li>jsonwebtoken：JWT 认证</li>
-<li>bcryptjs：密码加密</li>
-<li>express-validator：参数验证</li>
+<li>稳固的三脚架（必须！）</li>
+<li>快门线或遥控器</li>
+<li>ND 减光镜（傍晚时段需要）</li>
+<li>广角镜头（推荐 16-35mm）</li>
 </ul>
-<h3>数据库设计要点</h3>
-<p>使用 Mongoose Schema 定义数据结构时，需要注意以下几点：</p>
+<h3>拍摄设置</h3>
 <ol>
-<li>合理设置索引，提升查询性能</li>
-<li>使用 Ref 建立模型间关联</li>
-<li>添加软删除字段，便于数据恢复</li>
-<li>设置 Timestamps 自动管理时间戳</li>
+<li>ISO 设为最低值（100 或 50）</li>
+<li>光圈 f/8 - f/16，保证画面锐度</li>
+<li>快门速度 10-30 秒，根据车流量调整</li>
+<li>使用 2 秒延时或快门线避免机震</li>
 </ol>
-<p>完整代码已上传到 GitHub，欢迎 Star 和 Fork！</p>`,
-      tags: ['Node.js', 'Express', 'MongoDB', '后端', '教程'],
+<h3>构图建议</h3>
+<p>寻找有弯道的路口，车轨的曲线会让画面更有动感。天桥是非常好的拍摄位置，可以俯拍形成对称的光轨效果。</p>
+<p>蓝调时刻（日落后20-40分钟）是拍摄夜景的黄金时间，天空还保留着深蓝色，与城市灯光形成美妙的对比。</p>
+<p>大家有什么夜景拍摄的好机位推荐吗？评论区聊聊！</p>`,
+      tags: ['夜景', '长曝光', '车轨', '城市', '技巧'],
+      images: [
+        'https://picsum.photos/id/65/800/500',
+        'https://picsum.photos/id/57/800/500',
+      ],
       status: 'published',
     },
   ],
@@ -216,10 +218,8 @@ async function createUsers() {
   const users = [];
 
   for (const userData of SEED_CONFIG.users) {
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
     const user = await User.create({
       ...userData,
-      password: hashedPassword,
     });
     users.push(user);
     console.log(`  ✓ 用户 ${userData.username} 创建成功`);
@@ -233,7 +233,7 @@ async function createUsers() {
  * 创建分类
  */
 async function createCategories() {
-  console.log('正在创建分类...');
+  console.log('正在创建摄影分类...');
   const categories = await Category.create(SEED_CONFIG.categories);
   console.log(`共创建 ${categories.length} 个分类`);
   return categories;
@@ -245,25 +245,24 @@ async function createCategories() {
 async function createPosts(users, categories) {
   console.log('正在创建示例帖子...');
   const adminUser = users.find((u) => u.role === 'admin');
-  const techCategory = categories.find((c) => c.slug === 'tech');
-  const frontendCategory = categories.find((c) => c.slug === 'frontend');
-  const backendCategory = categories.find((c) => c.slug === 'backend');
+  const landscapeCategory = categories.find((c) => c.slug === 'landscape');
+  const streetCategory = categories.find((c) => c.slug === 'street');
 
   const postsData = [
     {
       ...SEED_CONFIG.posts[0],
       author: adminUser._id,
-      category: techCategory._id,
+      category: landscapeCategory._id,
     },
     {
       ...SEED_CONFIG.posts[1],
-      author: users[2]._id,
-      category: frontendCategory._id,
+      author: users[1]._id,
+      category: landscapeCategory._id,
     },
     {
       ...SEED_CONFIG.posts[2],
-      author: users[3]._id,
-      category: backendCategory._id,
+      author: users[2]._id,
+      category: streetCategory._id,
     },
   ];
 
@@ -296,7 +295,7 @@ async function updateCategoryCounts() {
 async function seed() {
   try {
     console.log('========================================');
-    console.log('   ForumHub 数据库初始化脚本');
+    console.log('   摄影论坛 数据库初始化脚本');
     console.log('========================================\n');
 
     // 连接数据库
@@ -322,15 +321,15 @@ async function seed() {
     console.log('  邮箱: admin@example.com');
     console.log('  密码: admin123\n');
     console.log('测试用户账号:');
-    console.log('  邮箱: test@example.com');
+    console.log('  邮箱: test@example.com (light_hunter)');
     console.log('  密码: test123\n');
     console.log('其他测试账号:');
-    console.log('  邮箱: john@example.com / 密码: john123');
-    console.log('  邮箱: jane@example.com / 密码: jane123');
+    console.log('  邮箱: street@example.com (street_shot) / 密码: street123');
+    console.log('  邮箱: star@example.com (star_traveler) / 密码: star123');
     console.log('========================================\n');
 
     console.log('数据库初始化完成！');
-    console.log('现在可以启动后端服务并访问论坛了。\n');
+    console.log('现在可以启动后端服务并访问摄影论坛了。\n');
 
     process.exit(0);
   } catch (error) {

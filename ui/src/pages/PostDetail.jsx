@@ -65,6 +65,15 @@ export default function PostDetail() {
 
         <h1 className="pd-title">{post.title}</h1>
 
+        {/* 图片展示 */}
+        {post.images && post.images.length > 0 && (
+            <div className="pd-images">
+                {post.images.map((img, index) => (
+                    <img key={index} src={img} alt={`${post.title} - ${index + 1}`} className="pd-image" />
+                ))}
+            </div>
+        )}
+
         <div className="pd-meta">
           <img
             className="pd-avatar"
