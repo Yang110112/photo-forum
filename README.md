@@ -1,7 +1,16 @@
+---
+AIGC:
+    ContentProducer: Minimax Agent AI
+    ContentPropagator: Minimax Agent AI
+    Label: AIGC
+    ProduceID: "00000000000000000000000000000000"
+    PropagateID: "00000000000000000000000000000000"
+    ReservedCode1: 304402201f1148893f61955d33387e0ca155136d9df2edba5bd035cb910fed61979e9eee022046b5e66434c5e3c7ad1b540c55057089bf947148cce980a168f4a6b1a7a52420
+    ReservedCode2: 304502200bb91d240841231ad43dab1ca25ae92e19ce18dd7ec4798c84d78e3d6682dbad022100825027f88701509d1d0e6188a981e3a157ed66831dbed10884b5282bb919ef0a
+---
+
 # ForumHub - 现代化社区论坛系统
-项目链接：http://47.107.143.36
-测试账号：111@example.com
-密码：123456
+项目链接：http://47.107.143.36， 暂未上传数据库
 
 ## 项目简介
 

@@ -3,6 +3,51 @@
   margin-top: 40vh;
   color: #a8a29e;
   font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #fde8d8;
+  border-top-color: #f97316;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pd-not-found {
+  text-align: center;
+  margin-top: 15vh;
+  padding: 40px;
+}
+
+.pd-not-found h2 {
+  font-size: 2rem;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.pd-not-found p {
+  color: #9ca3af;
+  margin-bottom: 24px;
+}
+
+.pd-not-found button {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .pd-container {
@@ -87,22 +132,26 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .pd-avatar {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
+  border: 2px solid #fed7aa;
+}
+
+.pd-author-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .pd-author {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #374151;
-  display: block;
 }
 
 .pd-date {
@@ -110,12 +159,20 @@
   color: #9ca3af;
 }
 
-.pd-stats {
-  margin-left: auto;
+/* 媒体展示 */
+.pd-media-gallery {
   display: flex;
-  gap: 16px;
-  font-size: 0.85rem;
-  color: #9ca3af;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.pd-media-item {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #f3f4f6;
 }
 
 .pd-content {
@@ -140,6 +197,36 @@
 .pd-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 0.88rem; }
 .pd-content ul, .pd-content ol { padding-left: 24px; }
 
+/* 互动栏 */
+.pd-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
+}
+
+.pd-action-btn {
+  padding: 10px 18px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.pd-action-btn:hover {
+  background: #f3f4f6;
+}
+
+.pd-action-btn.liked {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
 /* ===== 评论区 ===== */
 .pd-comment-section {
   background: #fff;
@@ -152,15 +239,17 @@
 }
 
 .pd-comment-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #111827;
   margin: 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #fff0e8;
 }
 
 .pd-comment-input {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: flex-start;
 }
 
@@ -168,97 +257,282 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .pd-textarea {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  padding: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 0.95rem;
   resize: vertical;
-  min-height: 80px;
+  min-height: 100px;
   outline: none;
   font-family: inherit;
   box-sizing: border-box;
   transition: border-color 0.2s;
 }
 
-.pd-textarea:focus { border-color: #3b82f6; }
+.pd-textarea:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.pd-textarea:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.pd-input-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pd-hint {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
 
 .pd-submit {
   align-self: flex-end;
-  padding: 8px 20px;
-  background: #3b82f6;
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
   color: #fff;
   border: none;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
 
-.pd-submit:hover { background: #2563eb; }
+.pd-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
 
-.pd-login-tip {
-  font-size: 0.9rem;
-  color: #6b7280;
+.pd-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 登录提示 */
+.pd-login-prompt {
+  flex: 1;
+  background: #fef3c7;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.pd-login-prompt p {
+  font-size: 0.95rem;
+  color: #92400e;
+  margin-bottom: 16px;
 }
 
 .pd-login-link {
-  color: #3b82f6;
+  color: #ea580c;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
+  text-decoration: underline;
 }
 
-.pd-login-link:hover { text-decoration: underline; }
+.pd-login-link:hover {
+  color: #c2410c;
+}
 
-.pd-no-comment {
-  text-align: center;
-  color: #9ca3af;
+.pd-anonymous-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pd-anonymous-comment button {
+  padding: 10px;
+  background: #d1d5db;
+  color: #6b7280;
+  border: none;
+  border-radius: 8px;
+  cursor: not-allowed;
   font-size: 0.9rem;
-  padding: 20px 0;
 }
 
+/* 评论列表 */
 .pd-comments {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.pd-comment-item {
-  display: flex;
-  gap: 12px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f3f4f6;
+.pd-no-comment {
+  text-align: center;
+  color: #9ca3af;
+  padding: 40px 20px;
+  background: #f9fafb;
+  border-radius: 12px;
 }
 
-.pd-comment-item:last-child { border-bottom: none; }
-
-.pd-comment-body { flex: 1; }
-
-.pd-comment-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+.no-comment-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 12px;
 }
 
-.pd-comment-author {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #374151;
+.pd-no-comment p {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 4px;
 }
 
-.pd-comment-date {
-  font-size: 0.78rem;
+.pd-no-comment small {
+  font-size: 0.85rem;
   color: #9ca3af;
 }
 
+.pd-comment-item {
+  display: flex;
+  gap: 14px;
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.pd-comment-item:hover {
+  background: #f3f4f6;
+}
+
+.pd-comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #fed7aa;
+}
+
+.pd-comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.pd-comment-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.pd-comment-author {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.pd-comment-date {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.pd-comment-like {
+  padding: 4px 10px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.pd-comment-like:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #d97706;
+}
+
 .pd-comment-content {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   color: #4b5563;
   line-height: 1.7;
   margin: 0;
+  word-wrap: break-word;
+}
+
+/* 评论提示 */
+.pd-comment-tip {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  padding: 16px 20px;
+  border-radius: 12px;
+  border-left: 4px solid #f59e0b;
+}
+
+.pd-comment-tip h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 10px;
+}
+
+.pd-comment-tip ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pd-comment-tip li {
+  font-size: 0.85rem;
+  color: #78350f;
+  padding: 4px 0;
+  padding-left: 18px;
+  position: relative;
+}
+
+.pd-comment-tip li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #d97706;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .pd-container {
+    padding: 0 12px 60px;
+    margin: 20px auto;
+  }
+
+  .pd-card,
+  .pd-comment-section {
+    padding: 24px 20px;
+  }
+
+  .pd-title {
+    font-size: 1.4rem;
+  }
+
+  .pd-comment-input {
+    flex-direction: column;
+  }
+
+  .pd-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .pd-actions {
+    justify-content: center;
+  }
+
+  .pd-action-btn {
+    flex: 1;
+    text-align: center;
+  }
 }
