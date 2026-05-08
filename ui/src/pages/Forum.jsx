@@ -28,27 +28,8 @@ export default function Forum() {
                     getPosts(),
                     getPosts({ sortBy: 'likeCount', order: 'desc', limit: 5 }),
                 ]);
-                let apiPosts = postsRes.data.posts || [];
+                setPosts(postsRes.data.posts || []);
                 setHotPosts(hotRes.data.posts || []);
-
-                // 合并本地存储的帖子
-                const savedPosts = localStorage.getItem('forumPosts');
-                if (savedPosts) {
-                    try {
-                        const localPosts = JSON.parse(savedPosts);
-                        const allPosts = [...localPosts];
-                        apiPosts.forEach(p => {
-                            if (!allPosts.find(ap => ap._id === p._id)) {
-                                allPosts.push(p);
-                            }
-                        });
-                        apiPosts = allPosts;
-                    } catch (e) {
-                        console.error('Failed to parse saved posts');
-                    }
-                }
-
-                setPosts(apiPosts);
             } catch (err) {
                 console.error('加载数据失败', err);
             } finally {
@@ -131,7 +112,7 @@ export default function Forum() {
                                     <div className="post-meta">
                                         <div className="post-author">
                                             <img
-                                                src={post.author?.avatar || `https://ui-avatars.com/api/?name=${post.author?.username || 'U'}&background=random&color=fff`}
+                                                src={`https://ui-avatars.com/api/?name=${post.author?.username || 'U'}&background=random&color=fff`}
                                                 alt={post.author?.username}
                                                 className="author-avatar"
                                             />
