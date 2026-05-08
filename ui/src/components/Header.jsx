@@ -90,16 +90,15 @@ export default function Header() {
                         <>
                             <Link to="/create" className="nav-link create-btn">发布作品</Link>
                             <img
-                                src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`}
+                                src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random&size=36`}
                                 alt={user.username}
                                 className="nav-avatar"
                                 onClick={() => navigate('/profile')}
                                 title={user.username}
                                 onError={(e) => {
-                                    e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`;
+                                    e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff&size=36`;
                                 }}
                             />
-                            <button onClick={handleLogout} className="logout-btn">退出</button>
                         </>
                     )}
                 </div>
