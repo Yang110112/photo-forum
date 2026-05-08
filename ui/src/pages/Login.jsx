@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '../store/authSlice';
 import { useNavigate, Link } from 'react-router-dom';
+import { message } from 'antd';
 import '../css/Login.css';
 
 export default function Login() {
@@ -13,10 +14,12 @@ export default function Login() {
     try {
       const result = await dispatch(loginUser(form)).unwrap();
       if (result.token) {
+        message.success('登录成功');
         navigate('/');
       }
     } catch (err) {
-      alert(err.message || '登录失败，请检查邮箱和密码');
+      const msg = err.response?.data?.message || '登录失败，邮箱或密码错误';
+      message.error(msg);
     }
   };
 

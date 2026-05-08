@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { register } from '../api/auth';
 import { useNavigate, Link } from 'react-router-dom';
+import { message } from 'antd';
 import '../css/Register.css';
 
 export default function Register() {
@@ -11,11 +12,11 @@ export default function Register() {
     e.preventDefault();
     try {
       await register(form);
-      alert('注册成功，去登录');
+      message.success('注册成功，请登录');
       navigate('/login');
     } catch (err) {
       const msg = err.response?.data?.errors?.[0]?.message || err.response?.data?.message || '注册失败';
-      alert(msg);
+      message.error(msg);
     }
   };
 

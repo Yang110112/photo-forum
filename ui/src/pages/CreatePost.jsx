@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPost } from '../api/posts';
 import { getCategories } from '../api/categories';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
 import '../css/CreatePost.css';
 
 export default function CreatePost() {
@@ -15,7 +16,7 @@ export default function CreatePost() {
 
   const submit = async () => {
     if (!form.category) {
-      alert('请选择分类');
+      message.warning('请选择分类');
       return;
     }
     try {
@@ -28,7 +29,7 @@ export default function CreatePost() {
       await createPost(payload);
       navigate('/forum');
     } catch (err) {
-      alert(err.response?.data?.errors?.[0]?.message || err.response?.data?.message || '发布失败，请重试');
+      message.error(err.response?.data?.errors?.[0]?.message || err.response?.data?.message || '发布失败，请重试');
     }
   };
 

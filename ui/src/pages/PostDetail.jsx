@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getPostById } from '../api/posts';
 import { getCommentsByPost, createComment } from '../api/comments';
+import { message } from 'antd';
 import '../css/PostDetail.css';
 
 export default function PostDetail() {
@@ -38,7 +39,7 @@ export default function PostDetail() {
       setComments(prev => [res.data.data.comment, ...prev]);
       setCommentText('');
     } catch {
-      alert('评论失败，请重试');
+      message.error('评论失败，请重试');
     }
   };
 
