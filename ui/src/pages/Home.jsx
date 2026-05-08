@@ -1,9 +1,98 @@
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import DailyHighlightModal from '../components/DailyHighlightModal';
 import '../css/Home.css';
 
+// 模拟数据 - 当日热门作品
+const mockHighlights = [
+  {
+    _id: 'highlight-1',
+    title: '日出云海',
+    content: '清晨的黄山云海，金色的阳光穿透云层，洒落在奇松怪石之上，宛如仙境。',
+    author: { username: '摄影达人', avatar: '' },
+    likeCount: 328,
+    commentCount: 56,
+    viewCount: 2341,
+    category: { name: '风光摄影' },
+    media: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    _id: 'highlight-2',
+    title: '城市夜景',
+    content: '夜幕下的上海陆家嘴，璀璨的灯光勾勒出现代都市的繁华与魅力。',
+    author: { username: '城市猎人', avatar: '' },
+    likeCount: 256,
+    commentCount: 43,
+    viewCount: 1892,
+    category: { name: '街头摄影' },
+    media: [],
+    createdAt: new Date().toISOString()
+  },
+  {
+    _id: 'highlight-3',
+    title: '人像作品：光影',
+    content: '利用自然光线营造氛围感，捕捉人物最真实的表情。',
+    author: { username: '光线大师', avatar: '' },
+    likeCount: 198,
+    commentCount: 34,
+    viewCount: 1456,
+    category: { name: '人像摄影' },
+    media: [],
+    createdAt: new Date().toISOString()
+  }
+];
+
 export default function HomePage() {
+    const [showHighlight, setShowHighlight] = useState(false);
+    const [highlightPost, setHighlightPost] = useState(null);
+    const navigate = useNavigate();
+
+    // 获取当日热门作品
+    useEffect(() => {
+        // 检查是否今天已经显示过
+        const today = new Date().toDateString();
+        const lastShown = localStorage.getItem('highlightShownDate');
+
+        if (lastShown !== today) {
+            // 获取点赞最高的作品
+            const savedPosts = localStorage.getItem('forumPosts');
+            let posts = mockHighlights;
+
+            if (savedPosts) {
+                const parsedPosts = JSON.parse(savedPosts);
+                if (parsedPosts.length > 0) {
+                    posts = parsedPosts;
+                }
+            }
+
+            // 按点赞数排序
+            const sorted = [...posts].sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+            if (sorted.length > 0) {
+                setHighlightPost(sorted[0]);
+                // 延迟显示弹窗，确保页面已加载
+                setTimeout(() => {
+                    setShowHighlight(true);
+                }, 500);
+            }
+        }
+    }, []);
+
+    const handleCloseHighlight = () => {
+        setShowHighlight(false);
+        // 记录今天已显示
+        const today = new Date().toDateString();
+        localStorage.setItem('highlightShownDate', today);
+    };
+
     return (
         <div className="homepage-container">
+            {/* 每日热门弹窗 */}
+            <DailyHighlightModal
+                isOpen={showHighlight}
+                onClose={handleCloseHighlight}
+                highlightPost={highlightPost}
+            />
 
             {/* Hero */}
             <header className="homepage-header">
@@ -52,18 +141,47 @@ export default function HomePage() {
                 </div>
                 <div className="category-grid">
                     {[
-                        { emoji: '🏔️', name: '风光摄影', desc: '山川大地，自然之美' },
-                        { emoji: '👤', name: '人像摄影', desc: '捕捉人物神韵与情感' },
-                        { emoji: '🏙️', name: '街头摄影', desc: '城市脉搏，生活瞬间' },
-                        { emoji: '🐾', name: '动物摄影', desc: '自然界的生灵之美' },
-                        { emoji: '🍽️', name: '美食摄影', desc: '色香味的视觉盛宴' },
-                        { emoji: '🌌', name: '星空摄影', desc: '仰望宇宙，无限深邃' },
+                        { emoji: '🏔️', name: '风光摄影', desc: '山川大地，自然之美', slug: 'landscape' },
+                        { emoji: '👤', name: '人像摄影', desc: '捕捉人物神韵与情感', slug: 'portrait' },
+                        { emoji: '🏙️', name: '街头摄影', desc: '城市脉搏，生活瞬间', slug: 'street' },
+                        { emoji: '🐾', name: '动物摄影', desc: '自然界的生灵之美', slug: 'animal' },
+                        { emoji: '🍽️', name: '美食摄影', desc: '色香味的视觉盛宴', slug: 'food' },
+                        { emoji: '🌌', name: '星空摄影', desc: '仰望宇宙，无限深邃', slug: 'astrophotography' },
                     ].map((cat) => (
-                        <Link to="/forum" className="category-card" key={cat.name}>
+                        <Link to={`/forum?category=${cat.slug}`} className="category-card" key={cat.name}>
                             <span className="category-emoji">{cat.emoji}</span>
                             <h4>{cat.name}</h4>
                             <p>{cat.desc}</p>
                         </Link>
+                    ))}
+                </div>
+            </section>
+
+            {/* 热门作品展示 */}
+            <section className="homepage-section">
+                <div className="section-header">
+                    <h2 className="section-title">🔥 热门作品</h2>
+                    <p className="section-sub">今日最受关注的摄影作品</p>
+                </div>
+                <div className="highlights-grid">
+                    {mockHighlights.slice(0, 3).map((post, index) => (
+                        <div
+                            key={post._id}
+                            className="highlight-card"
+                            onClick={() => navigate(`/post/${post._id}`)}
+                        >
+                            {index === 0 && <span className="highlight-badge">🏆 第1名</span>}
+                            {index === 1 && <span className="highlight-badge silver">🥈 第2名</span>}
+                            {index === 2 && <span className="highlight-badge bronze">🥉 第3名</span>}
+                            <div className="highlight-content">
+                                <h4>{post.title}</h4>
+                                <p>{post.content}</p>
+                                <div className="highlight-meta">
+                                    <span>❤️ {post.likeCount}</span>
+                                    <span>💬 {post.commentCount}</span>
+                                </div>
+                            </div>
+                        </div>
                     ))}
                 </div>
             </section>

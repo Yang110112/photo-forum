@@ -1,3 +1,14 @@
+---
+AIGC:
+    ContentProducer: Minimax Agent AI
+    ContentPropagator: Minimax Agent AI
+    Label: AIGC
+    ProduceID: "00000000000000000000000000000000"
+    PropagateID: "00000000000000000000000000000000"
+    ReservedCode1: 3046022100d35622985df2d0968643e71adcba3b0bb7c50f34b590170e465c06fed62b8a560221009960bca15e388354998628c12f76cb49a08551b9ace48b9b72691f9a75bec136
+    ReservedCode2: 3045022100e0ccbcca83d7239cd1e9debc651b4d13406ddef0db4fe0e23091bfaeed3aea0d02207cb693bfa3d401828e77e87c707cf26f8354750adca2c3e0d7c842ec4306d622
+---
+
 
 
 # 四人团队任务分配手册
