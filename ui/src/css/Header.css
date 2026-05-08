@@ -110,6 +110,20 @@
     color: #dc2626;
 }
 
+.nav-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid #fed7aa;
+    transition: border-color 0.2s;
+}
+
+.nav-avatar:hover {
+    border-color: #f97316;
+}
+
 /* 分类下拉菜单 */
 .nav-dropdown {
     position: relative;

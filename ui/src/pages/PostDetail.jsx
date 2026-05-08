@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getPostById } from '../api/posts';
 import { getCommentsByPost, createComment } from '../api/comments';
+import { message } from 'antd';
 import '../css/PostDetail.css';
 
 // 分类数据
@@ -98,7 +99,7 @@ export default function PostDetail() {
   const handleComment = async () => {
     if (!commentText.trim()) return;
     if (!user) {
-      alert('请先登录后再评论');
+      message.warning('请先登录后再评论');
       navigate('/login');
       return;
     }
@@ -129,7 +130,7 @@ export default function PostDetail() {
 
       setCommentText('');
     } catch (error) {
-      alert('评论失败，请重试');
+      message.error('评论失败，请重试');
     } finally {
       setSubmitting(false);
     }
@@ -137,7 +138,7 @@ export default function PostDetail() {
 
   const handleLike = () => {
     if (!user) {
-      alert('请先登录后再点赞');
+      message.warning('请先登录后再点赞');
       navigate('/login');
       return;
     }
@@ -185,8 +186,17 @@ export default function PostDetail() {
   };
 
   // 获取分类信息
-  const getCategoryInfo = (categorySlug) => {
-    return categories.find(c => c.slug === categorySlug) || { name: categorySlug, emoji: '📷' };
+  const getCategoryInfo = (category) => {
+    if (!category) return { name: '未分类', emoji: '📷' };
+    // category 可能是字符串(slug)或对象
+    const slug = typeof category === 'string' ? category : category.slug || category.name;
+    const found = categories.find(c => c.slug === slug);
+    if (found) return found;
+    // 如果是对象，直接用 name
+    if (typeof category === 'object' && category.name) {
+      return { name: category.name, emoji: '📷' };
+    }
+    return { name: slug, emoji: '📷' };
   };
 
   if (loading) return (
@@ -225,6 +235,15 @@ export default function PostDetail() {
         </div>
 
         <h1 className="pd-title">{post.title}</h1>
+
+        {/* 图片展示 */}
+        {post.images && post.images.length > 0 && (
+            <div className="pd-images">
+                {post.images.map((img, index) => (
+                    <img key={index} src={img} alt={`${post.title} - ${index + 1}`} className="pd-image" />
+                ))}
+            </div>
+        )}
 
         <div className="pd-meta">
           <img

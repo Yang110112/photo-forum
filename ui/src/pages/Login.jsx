@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { loginUser } from '../store/authSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { message } from 'antd';
 import '../css/Login.css';
 
 export default function Login() {
@@ -10,8 +11,16 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    await dispatch(loginUser(form));
-    navigate('/');
+    try {
+      const result = await dispatch(loginUser(form)).unwrap();
+      if (result.token) {
+        message.success('登录成功');
+        navigate('/');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || '登录失败，邮箱或密码错误';
+      message.error(msg);
+    }
   };
 
   return (
@@ -36,6 +45,9 @@ export default function Login() {
         >
           登录
         </button>
+        <p className="login-footer">
+          没有账号？<Link to="/register" className="login-link">前往注册</Link>
+        </p>
       </div>
   );
 }
