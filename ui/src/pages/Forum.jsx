@@ -1,26 +1,54 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import '../css/Forum.css';
 import { getPosts } from '../api/posts';
 import api from '../api/axios';
 
+// 分类数据
+const categoryList = [
+  { slug: 'landscape', name: '风光摄影', emoji: '🏔️' },
+  { slug: 'portrait', name: '人像摄影', emoji: '👤' },
+  { slug: 'street', name: '街头摄影', emoji: '🏙️' },
+  { slug: 'animal', name: '动物摄影', emoji: '🐾' },
+  { slug: 'food', name: '美食摄影', emoji: '🍽️' },
+  { slug: 'astrophotography', name: '星空摄影', emoji: '🌌' },
+];
+
 export default function Forum() {
     const [posts, setPosts] = useState([]);
     const [hotPosts, setHotPosts] = useState([]);
-    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchParams] = useSearchParams();
+    const currentCategory = searchParams.get('category');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [postsRes, hotRes, catRes] = await Promise.all([
+                const [postsRes, hotRes] = await Promise.all([
                     getPosts(),
                     getPosts({ sortBy: 'likeCount', order: 'desc', limit: 5 }),
-                    api.get('/categories'),
                 ]);
-                setPosts(postsRes.data.posts || []);
+                let apiPosts = postsRes.data.posts || [];
                 setHotPosts(hotRes.data.posts || []);
-                setCategories(catRes.data.data?.categories || catRes.data.categories || []);
+
+                // 合并本地存储的帖子
+                const savedPosts = localStorage.getItem('forumPosts');
+                if (savedPosts) {
+                    try {
+                        const localPosts = JSON.parse(savedPosts);
+                        const allPosts = [...localPosts];
+                        apiPosts.forEach(p => {
+                            if (!allPosts.find(ap => ap._id === p._id)) {
+                                allPosts.push(p);
+                            }
+                        });
+                        apiPosts = allPosts;
+                    } catch (e) {
+                        console.error('Failed to parse saved posts');
+                    }
+                }
+
+                setPosts(apiPosts);
             } catch (err) {
                 console.error('加载数据失败', err);
             } finally {
@@ -29,6 +57,11 @@ export default function Forum() {
         };
         fetchData();
     }, []);
+
+    // 根据分类筛选帖子
+    const filteredPosts = currentCategory
+        ? posts.filter(post => post.category === currentCategory || post.category?.slug === currentCategory)
+        : posts;
 
     if (loading) return (
         <div style={{
@@ -56,51 +89,76 @@ export default function Forum() {
         <div className="forum-layout">
             {/* 左侧主内容 */}
             <div className="forum-main">
-                <div className="home-header">
+                <div className="forum-header">
                     <Link to="/create" className="btn-primary">发布作品</Link>
                 </div>
 
-                <div className="posts-grid">
-                    {posts.map((post) => (
-                        <div key={post._id} className="post-card">
-                            {post.images && post.images.length > 0 && (
-                                <Link to={`/post/${post._id}`}>
-                                    <img
-                                        src={post.images[0]}
-                                        alt={post.title}
-                                        className="post-cover"
-                                    />
-                                </Link>
-                            )}
-                            <div className="post-card-body">
-                                <Link to={`/post/${post._id}`}>
-                                    <h3 className="post-title">{post.title}</h3>
-                                </Link>
-                                <p className="post-content">{post.content}</p>
-                                <div className="post-meta">
-                                    <div className="post-author">
-                                        <img
-                                            src={`https://ui-avatars.com/api/?name=${post.author?.username}&background=random&color=fff`}
-                                            alt={post.author?.username}
-                                            className="author-avatar"
-                                        />
-                                        <span>{post.author?.username}</span>
+                {filteredPosts.length === 0 ? (
+                    <div className="forum-empty">
+                        <div className="empty-icon">📷</div>
+                        <h3>暂无作品</h3>
+                        <p>还没有人发布作品，成为第一个分享者吧！</p>
+                        <Link to="/create" className="btn-primary">发布作品</Link>
+                    </div>
+                ) : (
+                    <div className="posts-grid">
+                        {filteredPosts.map((post) => (
+                            <div key={post._id} className="post-card">
+                                {/* 媒体预览 */}
+                                {post.media && post.media.length > 0 ? (
+                                    <Link to={`/post/${post._id}`}>
+                                        <div className="post-media-preview">
+                                            {post.media[0].type?.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(post.media[0].url) ? (
+                                                <video src={post.media[0].url} />
+                                            ) : (
+                                                <img src={post.media[0].url} alt={post.title} />
+                                            )}
+                                            {post.media.length > 1 && (
+                                                <span className="media-count">+{post.media.length - 1}</span>
+                                            )}
+                                        </div>
+                                    </Link>
+                                ) : post.images && post.images.length > 0 ? (
+                                    <Link to={`/post/${post._id}`}>
+                                        <img src={post.images[0]} alt={post.title} className="post-cover" />
+                                    </Link>
+                                ) : null}
+                                <div className="post-card-body">
+                                    <Link to={`/post/${post._id}`}>
+                                        <h3 className="post-title">{post.title}</h3>
+                                    </Link>
+                                    <p className="post-content">{post.content}</p>
+                                    <div className="post-meta">
+                                        <div className="post-author">
+                                            <img
+                                                src={post.author?.avatar || `https://ui-avatars.com/api/?name=${post.author?.username || 'U'}&background=random&color=fff`}
+                                                alt={post.author?.username}
+                                                className="author-avatar"
+                                            />
+                                            <span>{post.author?.username || '匿名用户'}</span>
+                                        </div>
+                                        <div className="post-stats">
+                                            <span>{post.viewCount || 0} 浏览</span>
+                                            <span>{post.likeCount || 0} 点赞</span>
+                                        </div>
                                     </div>
-                                    <div className="post-stats">
-                                        <span>{post.viewCount} 浏览</span>
-                                        <span>{post.likeCount} 点赞</span>
+                                    <div className="post-tags">
+                                        {post.category && (
+                                            <span className="post-category">
+                                                {typeof post.category === 'string'
+                                                    ? (categoryList.find(c => c.slug === post.category)?.name || post.category)
+                                                    : post.category?.name}
+                                            </span>
+                                        )}
+                                        {post.tags?.map((tag) => (
+                                            <span key={tag} className="post-tag">#{tag}</span>
+                                        ))}
                                     </div>
-                                </div>
-                                <div className="post-tags">
-                                    <span className="post-category">{post.category?.name}</span>
-                                    {post.tags?.map((tag) => (
-                                        <span key={tag} className="post-tag">#{tag}</span>
-                                    ))}
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* 右侧边栏 */}
@@ -109,10 +167,14 @@ export default function Forum() {
                 <div className="sidebar-card">
                     <h3 className="sidebar-title">摄影分类</h3>
                     <div className="sidebar-categories">
-                        {categories.map((cat) => (
-                            <span key={cat._id} className="sidebar-cat-item">
-                                {cat.name}
-                            </span>
+                        {categoryList.map((cat) => (
+                            <Link
+                                key={cat.slug}
+                                to={`/forum?category=${cat.slug}`}
+                                className={`sidebar-cat-item ${currentCategory === cat.slug ? 'active' : ''}`}
+                            >
+                                {cat.emoji} {cat.name}
+                            </Link>
                         ))}
                     </div>
                 </div>
