@@ -186,8 +186,17 @@ export default function PostDetail() {
   };
 
   // 获取分类信息
-  const getCategoryInfo = (categorySlug) => {
-    return categories.find(c => c.slug === categorySlug) || { name: categorySlug, emoji: '📷' };
+  const getCategoryInfo = (category) => {
+    if (!category) return { name: '未分类', emoji: '📷' };
+    // category 可能是字符串(slug)或对象
+    const slug = typeof category === 'string' ? category : category.slug || category.name;
+    const found = categories.find(c => c.slug === slug);
+    if (found) return found;
+    // 如果是对象，直接用 name
+    if (typeof category === 'object' && category.name) {
+      return { name: category.name, emoji: '📷' };
+    }
+    return { name: slug, emoji: '📷' };
   };
 
   if (loading) return (
