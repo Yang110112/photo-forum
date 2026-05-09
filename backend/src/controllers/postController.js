@@ -241,10 +241,8 @@ exports.deletePost = async (req, res, next) => {
       return next(new AppError('没有权限删除此帖子', 403));
     }
 
-    // 软删除
-    post.status = 'deleted';
-    post.isDeleted = true;
-    await post.save();
+    // 删除帖子
+    await Post.findByIdAndDelete(id);
 
     // 更新分类计数
     await Category.updatePostCount(post.category, -1);

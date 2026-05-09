@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate,useSearchParams } from 'react-router-dom';
 import '../css/Forum.css';
 import { getPosts } from '../api/posts';
 import api from '../api/axios';
@@ -20,6 +20,7 @@ export default function Forum() {
     const [loading, setLoading] = useState(true);
     const [searchParams] = useSearchParams();
     const currentCategory = searchParams.get('category');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,9 +71,6 @@ export default function Forum() {
         <div className="forum-layout">
             {/* 左侧主内容 */}
             <div className="forum-main">
-                <div className="forum-header">
-                    <Link to="/create" className="btn-primary">发布作品</Link>
-                </div>
 
                 {filteredPosts.length === 0 ? (
                     <div className="forum-empty">
@@ -84,7 +82,12 @@ export default function Forum() {
                 ) : (
                     <div className="posts-grid">
                         {filteredPosts.map((post) => (
-                            <div key={post._id} className="post-card">
+                            <div
+                                key={post._id}
+                                className="post-card"
+                                onClick={() => navigate(`/post/${post._id}`)}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 {/* 媒体预览 */}
                                 {post.media && post.media.length > 0 ? (
                                     <Link to={`/post/${post._id}`}>
@@ -100,10 +103,21 @@ export default function Forum() {
                                         </div>
                                     </Link>
                                 ) : post.images && post.images.length > 0 ? (
-                                    <Link to={`/post/${post._id}`}>
+                                <Link to={`/post/${post._id}`}>
+                                    {post.images[0].startsWith('data:video') ? (
+                                        <video
+                                            src={post.images[0]}
+                                            className="post-cover"
+                                            muted
+                                            style={{ width: '100%', height: '180px', objectFit: 'cover' }}
+                                            onMouseEnter={(e) => e.target.play()}
+                                            onMouseLeave={(e) => { e.target.pause(); e.target.currentTime = 0; }}
+                                        />
+                                    ) : (
                                         <img src={post.images[0]} alt={post.title} className="post-cover" />
-                                    </Link>
-                                ) : null}
+                                    )}
+                                </Link>
+                            ) : null}
                                 <div className="post-card-body">
                                     <Link to={`/post/${post._id}`}>
                                         <h3 className="post-title">{post.title}</h3>
@@ -121,6 +135,7 @@ export default function Forum() {
                                         <div className="post-stats">
                                             <span>{post.viewCount || 0} 浏览</span>
                                             <span>{post.likeCount || 0} 点赞</span>
+                                            <span>{post.commentCount || 0} 评论</span>
                                         </div>
                                     </div>
                                     <div className="post-tags">
@@ -144,21 +159,6 @@ export default function Forum() {
 
             {/* 右侧边栏 */}
             <aside className="forum-sidebar">
-                {/* 分类导航 */}
-                <div className="sidebar-card">
-                    <h3 className="sidebar-title">摄影分类</h3>
-                    <div className="sidebar-categories">
-                        {categoryList.map((cat) => (
-                            <Link
-                                key={cat.slug}
-                                to={`/forum?category=${cat.slug}`}
-                                className={`sidebar-cat-item ${currentCategory === cat.slug ? 'active' : ''}`}
-                            >
-                                {cat.emoji} {cat.name}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
 
                 {/* 热门排行 */}
                 <div className="sidebar-card">
@@ -184,8 +184,12 @@ export default function Forum() {
                         {posts.slice(0, 5).map((post) => (
                             <Link to={`/post/${post._id}`} key={post._id} className="sidebar-hot-item">
                                 {post.images && post.images.length > 0 && (
+                                post.images[0].startsWith('data:video') ? (
+                                    <video src={post.images[0]} className="sidebar-thumb" muted />
+                                ) : (
                                     <img src={post.images[0]} alt={post.title} className="sidebar-thumb" />
-                                )}
+                                )
+                           )}
                                 <div className="hot-info">
                                     <span className="hot-title">{post.title}</span>
                                     <span className="hot-stats">{post.author?.username}</span>

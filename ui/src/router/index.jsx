@@ -11,6 +11,7 @@ import PostDetail from '../pages/PostDetail';
 import CreatePost from '../pages/CreatePost';
 import Profile from '../pages/Profile';
 import Messages from '../pages/Messages';
+import MyPosts from '../pages/MyPosts';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useSelector(state => state.auth);
@@ -27,6 +28,7 @@ const routes = [
             { path: '/create', element: <CreatePost /> },
             { path: '/profile', element: <Profile /> },
             { path: '/messages', element: <Messages /> },
+            { path: '/my-posts', element: <MyPosts /> },
             { path: '*', element: <Navigate to="/" replace /> },
         ]
     },
