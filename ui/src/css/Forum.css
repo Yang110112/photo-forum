@@ -14,14 +14,7 @@
 }
 
 /* ===== Header ===== */
-.forum-header {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    margin-bottom: 24px;
-}
-
-.forum-header .btn-primary {
+ .btn-primary {
     padding: 10px 24px;
     background: linear-gradient(135deg, #f97316, #ef4444);
     color: #fff;

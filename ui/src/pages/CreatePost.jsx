@@ -71,10 +71,10 @@ export default function CreatePost() {
         setLoading(true);
 
         try {
-            // 把图片转成 base64
+            // 把图片和视频都转成 base64
             const images = await Promise.all(
                 mediaFiles
-                    .filter(f => f.type === 'image')
+                    .filter(f => f.type === 'image' || f.type === 'video')
                     .map(f => toBase64(f.file))
             );
 

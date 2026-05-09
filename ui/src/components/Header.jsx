@@ -21,6 +21,7 @@ export default function Header() {
     const location = useLocation();
     const [showCategories, setShowCategories] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     const handleLogout = () => {
         dispatch(logout());
@@ -89,16 +90,27 @@ export default function Header() {
                     {user && (
                         <>
                             <Link to="/create" className="nav-link create-btn">发布作品</Link>
-                            <img
-                                src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random&size=36`}
-                                alt={user.username}
-                                className="nav-avatar"
-                                onClick={() => navigate('/profile')}
-                                title={user.username}
-                                onError={(e) => {
-                                    e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff&size=36`;
-                                }}
-                            />
+                            <div className="nav-avatar-wrap"
+                                onMouseEnter={() => setShowUserMenu(true)}
+                                onMouseLeave={() => setShowUserMenu(false)}
+                            >
+                                <img
+                                    src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff&size=36`}
+                                    alt={user.username}
+                                    className="nav-avatar"
+                                    onError={(e) => {
+                                        e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff&size=36`;
+                                    }}
+                                />
+                                {showUserMenu && (
+                                    <div className="user-dropdown">
+                                        <Link to="/profile" className="user-dropdown-item">个人中心</Link>
+                                        <Link to="/my-posts" className="user-dropdown-item">我的作品</Link>
+                                        <div className="user-dropdown-divider" />
+                                        <button className="user-dropdown-item user-dropdown-logout" onClick={handleLogout}>退出登录</button>
+                                    </div>
+                                )}
+                            </div>
                         </>
                     )}
                 </div>

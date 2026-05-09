@@ -19,7 +19,7 @@ const categories = [
 export default function PostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, token } = useSelector(state => state.auth);
+  const { user } = useSelector(state => state.auth);
 
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -39,62 +39,15 @@ export default function PostDetail() {
         setPost(postRes.data.data.post);
         setComments(commentRes.data.comments || []);
         setLikeCount(postRes.data.data.post?.likeCount || 0);
+        setLiked(postRes.data.data.post?.isLiked || false);
       } catch (error) {
-        console.log('API failed, loading from localStorage');
-
-        // 从localStorage加载帖子
-        const savedPosts = localStorage.getItem('forumPosts');
-        if (savedPosts) {
-          try {
-            const posts = JSON.parse(savedPosts);
-            const localPost = posts.find(p => p._id === id);
-            if (localPost) {
-              setPost(localPost);
-              setLikeCount(localPost.likeCount || 0);
-            }
-          } catch (e) {
-            console.error('Failed to parse saved posts');
-          }
-        }
-
-        // 从localStorage加载评论
-        const savedComments = localStorage.getItem(`comments_${id}`);
-        if (savedComments) {
-          try {
-            setComments(JSON.parse(savedComments));
-          } catch (e) {
-            console.error('Failed to parse saved comments');
-          }
-        }
+        message.error('加载失败');
       } finally {
         setLoading(false);
       }
     };
     fetchAll();
   }, [id]);
-
-  // 保存评论到localStorage
-  const saveComments = (newComments) => {
-    localStorage.setItem(`comments_${id}`, JSON.stringify(newComments));
-    setComments(newComments);
-
-    // 更新帖子的评论数
-    const savedPosts = localStorage.getItem('forumPosts');
-    if (savedPosts) {
-      try {
-        const posts = JSON.parse(savedPosts);
-        const updatedPosts = posts.map(p => {
-          if (p._id === id) {
-            return { ...p, commentCount: newComments.length };
-          }
-          return p;
-        });
-        localStorage.setItem('forumPosts', JSON.stringify(updatedPosts));
-      } catch (e) {
-        console.error('Failed to update post comment count');
-      }
-    }
-  };
 
   const handleComment = async () => {
     if (!commentText.trim()) return;
@@ -103,33 +56,14 @@ export default function PostDetail() {
       navigate('/login');
       return;
     }
-
     setSubmitting(true);
-
     try {
-      const newComment = {
-        _id: `comment-${Date.now()}`,
-        content: commentText.trim(),
-        author: {
-          username: user.username,
-          avatar: user.avatar || ''
-        },
-        createdAt: new Date().toISOString(),
-        likeCount: 0
-      };
-
-      // 保存到API
-      try {
-        const res = await createComment({ content: commentText, post: id });
-        saveComments([newComment, ...comments]);
-      } catch (apiError) {
-        // API失败，保存到localStorage
-        console.log('Saving comment to localStorage');
-        saveComments([newComment, ...comments]);
-      }
-
+      await createComment({ content: commentText, post: id });
+      const res = await getCommentsByPost(id);
+      setComments(res.data.comments || []);
       setCommentText('');
-    } catch (error) {
+      message.success('评论成功');
+    } catch (err) {
       message.error('评论失败，请重试');
     } finally {
       setSubmitting(false);
@@ -142,57 +76,31 @@ export default function PostDetail() {
       navigate('/login');
       return;
     }
-
     setLiked(!liked);
     setLikeCount(prev => liked ? prev - 1 : prev + 1);
-
-    // 保存点赞状态到localStorage
-    const likes = JSON.parse(localStorage.getItem('userLikes') || '[]');
-    if (liked) {
-      const updatedLikes = likes.filter(l => l !== id);
-      localStorage.setItem('userLikes', JSON.stringify(updatedLikes));
-    } else {
-      likes.push(id);
-      localStorage.setItem('userLikes', JSON.stringify(likes));
-    }
-  };
-
-  const handleCommentLike = (commentId) => {
-    const updatedComments = comments.map(c => {
-      if (c._id === commentId) {
-        return { ...c, likeCount: (c.likeCount || 0) + 1 };
-      }
-      return c;
-    });
-    saveComments(updatedComments);
   };
 
   const avatarUrl = (username, avatar) => {
     if (avatar && !avatar.startsWith('/uploads')) return avatar;
-    return `https://ui-avatars.com/api/?name=${username || 'U'}&background=random&color=fff`;
+    return `https://ui-avatars.com/api/?name=${username || 'U'}&background=f97316&color=fff`;
   };
 
-  // 格式化时间
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
-
     if (diff < 60000) return '刚刚';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
     return date.toLocaleDateString('zh-CN');
   };
 
-  // 获取分类信息
   const getCategoryInfo = (category) => {
     if (!category) return { name: '未分类', emoji: '📷' };
-    // category 可能是字符串(slug)或对象
     const slug = typeof category === 'string' ? category : category.slug || category.name;
     const found = categories.find(c => c.slug === slug);
     if (found) return found;
-    // 如果是对象，直接用 name
     if (typeof category === 'object' && category.name) {
       return { name: category.name, emoji: '📷' };
     }
@@ -218,11 +126,10 @@ export default function PostDetail() {
 
   return (
     <div className="pd-container">
-      {/* 帖子主体 */}
       <div className="pd-card">
         <div className="pd-header">
-          <button className="pd-back" onClick={() => navigate(-1)}>
-            ← 返回
+          <button className="pd-back" onClick={() => navigate('/forum')}>
+              ← 返回
           </button>
           <div className="pd-tags">
             <span className="pd-category">
@@ -236,13 +143,27 @@ export default function PostDetail() {
 
         <h1 className="pd-title">{post.title}</h1>
 
-        {/* 图片展示 */}
+        {/* 图片/视频展示 */}
         {post.images && post.images.length > 0 && (
-            <div className="pd-images">
-                {post.images.map((img, index) => (
-                    <img key={index} src={img} alt={`${post.title} - ${index + 1}`} className="pd-image" />
-                ))}
-            </div>
+          <div className="pd-images">
+            {post.images.map((item, index) => (
+              item.startsWith('data:video') ? (
+                <video
+                  key={index}
+                  src={item}
+                  controls
+                  className="pd-image"
+                />
+              ) : (
+                <img
+                  key={index}
+                  src={item}
+                  alt={`${post.title} - ${index + 1}`}
+                  className="pd-image"
+                />
+              )
+            ))}
+          </div>
         )}
 
         <div className="pd-meta">
@@ -257,25 +178,11 @@ export default function PostDetail() {
           </div>
         </div>
 
-        {/* 媒体展示 */}
-        {post.media && post.media.length > 0 && (
-          <div className="pd-media-gallery">
-            {post.media.map((media, index) => (
-              media.type?.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(media.url) ? (
-                <video key={index} src={media.url} controls className="pd-media-item" />
-              ) : (
-                <img key={index} src={media.url} alt={`Media ${index + 1}`} className="pd-media-item" />
-              )
-            ))}
-          </div>
-        )}
-
         <div
           className="pd-content"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
-        {/* 互动栏 */}
         <div className="pd-actions">
           <button
             className={`pd-action-btn ${liked ? 'liked' : ''}`}
@@ -298,7 +205,6 @@ export default function PostDetail() {
           💬 评论 ({comments.length})
         </h3>
 
-        {/* 评论输入框 */}
         <div className="pd-comment-input">
           {user ? (
             <>
@@ -310,13 +216,13 @@ export default function PostDetail() {
               <div className="pd-input-wrap">
                 <textarea
                   className="pd-textarea"
-                  placeholder="写下你的评论... (所有用户都可以评论)"
+                  placeholder="写下你的评论..."
                   value={commentText}
                   onChange={e => setCommentText(e.target.value)}
                   rows="3"
                 />
                 <div className="pd-input-actions">
-                  <span className="pd-hint">评论是一种分享，让更多人看到你的想法</span>
+                  <span className="pd-hint">友善交流，分享你的真实感受</span>
                   <button
                     className="pd-submit"
                     onClick={handleComment}
@@ -331,22 +237,12 @@ export default function PostDetail() {
             <div className="pd-login-prompt">
               <p>
                 <span onClick={() => navigate('/login')} className="pd-login-link">登录</span>
-                后参与评论，所有登录用户都可以发表评论！
+                后参与评论
               </p>
-              <div className="pd-anonymous-comment">
-                <textarea
-                  className="pd-textarea"
-                  placeholder="未登录状态下也可以写下评论（登录后发布）"
-                  disabled
-                  rows="2"
-                />
-                <button disabled>请先登录</button>
-              </div>
             </div>
           )}
         </div>
 
-        {/* 评论列表 */}
         <div className="pd-comments">
           {comments.length === 0 ? (
             <div className="pd-no-comment">
@@ -368,30 +264,12 @@ export default function PostDetail() {
                       <span className="pd-comment-author">{c.author?.username || '匿名用户'}</span>
                       <span className="pd-comment-date">{formatTime(c.createdAt)}</span>
                     </div>
-                    <button
-                      className="pd-comment-like"
-                      onClick={() => handleCommentLike(c._id)}
-                      title="点赞评论"
-                    >
-                      👍 {c.likeCount || 0}
-                    </button>
                   </div>
                   <p className="pd-comment-content">{c.content}</p>
                 </div>
               </div>
             ))
           )}
-        </div>
-
-        {/* 评论提示 */}
-        <div className="pd-comment-tip">
-          <h4>💡 评论规范</h4>
-          <ul>
-            <li>尊重他人，友善交流</li>
-            <li>分享你对作品的真实感受</li>
-            <li>禁止发布广告、垃圾信息</li>
-            <li>所有注册用户都可以发表评论</li>
-          </ul>
         </div>
       </div>
     </div>
