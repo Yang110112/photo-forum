@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { getPostById } from '../api/posts';
 import { getCommentsByPost, createComment } from '../api/comments';
 import { message } from 'antd';
+import { getPostById, likePost, unlikePost } from '../api/posts';
 import '../css/PostDetail.css';
 
 // 分类数据
@@ -70,15 +70,26 @@ export default function PostDetail() {
     }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!user) {
-      message.warning('请先登录后再点赞');
-      navigate('/login');
-      return;
+        message.warning('请先登录后再点赞');
+        navigate('/login');
+        return;
     }
-    setLiked(!liked);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
-  };
+    try {
+        if (liked) {
+            await unlikePost(id);
+            setLiked(false);
+            setLikeCount(prev => prev - 1);
+        } else {
+            await likePost(id);
+            setLiked(true);
+            setLikeCount(prev => prev + 1);
+        }
+    } catch (err) {
+        message.error(err.response?.data?.message || '操作失败');
+    }
+};
 
   const avatarUrl = (username, avatar) => {
     if (avatar && !avatar.startsWith('/uploads')) return avatar;

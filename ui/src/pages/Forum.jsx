@@ -135,6 +135,7 @@ export default function Forum() {
                                         <div className="post-stats">
                                             <span>{post.viewCount || 0} 浏览</span>
                                             <span>{post.likeCount || 0} 点赞</span>
+                                            <span>{post.commentCount || 0} 评论</span>
                                         </div>
                                     </div>
                                     <div className="post-tags">
