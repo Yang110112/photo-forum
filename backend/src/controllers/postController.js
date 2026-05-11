@@ -13,16 +13,11 @@ const { AppError } = require('../middleware/errorHandler');
  */
 exports.createPost = async (req, res, next) => {
   try {
-    const { title, content, category, tags, images } = req.body;
+    const { title, content, category, tags } = req.body;
 
-    // 验证分类（支持 ObjectId 和 slug）
-    let categoryDoc;
-    if (category.match(/^[0-9a-fA-F]{24}$/)) {
-      categoryDoc = await Category.findById(category);
-    } else {
-      categoryDoc = await Category.findOne({ slug: category });
-    }
-    if (!categoryDoc) {
+    // 验证分类
+    const categoryExists = await Category.findById(category);
+    if (!categoryExists) {
       return next(new AppError('分类不存在', 404));
     }
 
@@ -30,14 +25,13 @@ exports.createPost = async (req, res, next) => {
     const post = await Post.create({
       title,
       content,
-      category: categoryDoc._id,
+      category,
       tags: tags || [],
-      author: req.user._id,
-      images: images || [],
+      author: req.user._id
     });
 
     // 更新分类帖子数
-    await Category.updatePostCount(categoryDoc._id, 1);
+    await Category.updatePostCount(category, 1);
 
     // 填充关联数据
     await post.populate('author', 'username avatar');
@@ -241,8 +235,10 @@ exports.deletePost = async (req, res, next) => {
       return next(new AppError('没有权限删除此帖子', 403));
     }
 
-    // 删除帖子
-    await Post.findByIdAndDelete(id);
+    // 软删除
+    post.status = 'deleted';
+    post.isDeleted = true;
+    await post.save();
 
     // 更新分类计数
     await Category.updatePostCount(post.category, -1);

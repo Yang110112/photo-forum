@@ -35,10 +35,6 @@ const postSchema = new mongoose.Schema({
     trim: true,
     maxlength: 20
   }],
-  images: [{
-    type: String,
-    trim: true
-  }],
   viewCount: {
     type: Number,
     default: 0,

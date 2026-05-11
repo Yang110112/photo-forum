@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
@@ -21,13 +21,13 @@ export default function Header() {
     const location = useLocation();
     const [showCategories, setShowCategories] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
-    const [showUserMenu, setShowUserMenu] = useState(false);
 
     const handleLogout = () => {
         dispatch(logout());
         navigate('/login');
     };
 
+    // 获取当前选中的分类
     const getCurrentCategory = () => {
         const params = new URLSearchParams(location.search);
         return params.get('category');
@@ -43,7 +43,7 @@ export default function Header() {
     return (
         <header className="header">
             <div className="header-container">
-                <Link to="/" className="logo">摄影论坛</Link>
+                <Link to="/" className="logo">📷 摄影论坛</Link>
 
                 <nav className="nav">
                     <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>首页</Link>
@@ -56,7 +56,7 @@ export default function Header() {
                         onMouseLeave={() => setShowCategories(false)}
                     >
                         <button className={`nav-link nav-dropdown-btn ${currentCategory ? 'active' : ''}`}>
-                            分类 {showCategories ? '▲' : '▼'}
+                            📂 分类 {showCategories ? '▲' : '▼'}
                         </button>
 
                         {showCategories && (
@@ -87,30 +87,26 @@ export default function Header() {
                 </nav>
 
                 <div className="nav-actions">
-                    {user && (
+                    {!user ? (
                         <>
-                            <Link to="/create" className="nav-link create-btn">发布作品</Link>
-                            <div className="nav-avatar-wrap"
-                                onMouseEnter={() => setShowUserMenu(true)}
-                                onMouseLeave={() => setShowUserMenu(false)}
-                            >
-                                <img
-                                    src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff&size=36`}
-                                    alt={user.username}
-                                    className="nav-avatar"
-                                    onError={(e) => {
-                                        e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff&size=36`;
-                                    }}
-                                />
-                                {showUserMenu && (
-                                    <div className="user-dropdown">
-                                        <Link to="/profile" className="user-dropdown-item">个人中心</Link>
-                                        <Link to="/my-posts" className="user-dropdown-item">我的作品</Link>
-                                        <div className="user-dropdown-divider" />
-                                        <button className="user-dropdown-item user-dropdown-logout" onClick={handleLogout}>退出登录</button>
-                                    </div>
-                                )}
-                            </div>
+                            <Link to="/login" className="nav-link">登录</Link>
+                            <Link to="/register" className="nav-link register-link">注册</Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/create" className="nav-link create-btn">📷 发布作品</Link>
+                            <Link to="/messages" className="nav-link messages-btn">💬 私信</Link>
+                            <img
+                                src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`}
+                                alt={user.username}
+                                className="nav-avatar"
+                                onClick={() => navigate('/profile')}
+                                title={user.username}
+                                onError={(e) => {
+                                    e.target.src = `https://ui-avatars.com/api/?name=${user.username}&background=3b82f6&color=fff`;
+                                }}
+                            />
+                            <button onClick={handleLogout} className="logout-btn">退出</button>
                         </>
                     )}
                 </div>
@@ -119,10 +115,10 @@ export default function Header() {
             {/* 移动端菜单内容 */}
             {showMobileMenu && (
                 <div className="mobile-menu">
-                    <Link to="/" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>首页</Link>
-                    <Link to="/forum" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>论坛</Link>
+                    <Link to="/" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>🏠 首页</Link>
+                    <Link to="/forum" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>📝 论坛</Link>
 
-                    <div className="mobile-menu-section">分类</div>
+                    <div className="mobile-menu-section">📂 分类</div>
                     {categories.map(cat => (
                         <Link
                             key={cat.slug}
@@ -138,8 +134,11 @@ export default function Header() {
                     {user && (
                         <>
                             <div className="mobile-menu-divider"></div>
-                            <Link to="/create" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>发布作品</Link>
-                            <Link to="/profile" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>个人中心</Link>
+                            <Link to="/create" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>📷 发布作品</Link>
+                            <Link to="/certification" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>✅ 摄影师认证</Link>
+                            <Link to="/bookings" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>📅 约拍管理</Link>
+                            <Link to="/messages" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>💬 私信</Link>
+                            <Link to="/profile" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>👤 个人中心</Link>
                         </>
                     )}
                 </div>

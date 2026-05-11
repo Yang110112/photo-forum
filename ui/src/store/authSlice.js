@@ -2,14 +2,10 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { login, register, getMe } from '../api/auth';
 
 // 登录
-export const loginUser = createAsyncThunk('auth/login', async (data, { rejectWithValue }) => {
-  try {
-    const res = await login(data);
-    localStorage.setItem('token', res.data.data.token);
-    return res.data.data;
-  } catch (err) {
-    return rejectWithValue(err.response?.data || { message: '登录失败' });
-  }
+export const loginUser = createAsyncThunk('auth/login', async (data) => {
+  const res = await login(data);
+  localStorage.setItem('token', res.data.data.token);
+  return res.data.data;
 });
 
 // 注册

@@ -58,62 +58,6 @@
     align-items: center;
 }
 
-.nav-avatar-wrap {
-    position: relative;
-    cursor: pointer;
-}
-
-.user-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-    border: 1px solid #fde8d8;
-    min-width: 140px;
-    padding: 6px;
-    z-index: 100;
-    right: 50%;
-    transform: translateX(50%);
-}
-
-.user-dropdown-item {
-    display: block;
-    text-align: center;
-    padding: 10px 14px;
-    font-size: 0.9rem;
-    color: #1c1917;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: background 0.2s;
-    font-weight: 500;
-    width: 100%;
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-.user-dropdown-item:hover {
-    background: #fff7ed;
-    color: #ea580c;
-}
-
-.user-dropdown-divider {
-    height: 1px;
-    background: #fde8d8;
-    margin: 4px 0;
-}
-
-.user-dropdown-logout {
-    color: #e11d48;
-}
-
-.user-dropdown-logout:hover {
-    background: #fff1f2;
-    color: #e11d48;
-}
-
 .register-link {
     background: linear-gradient(135deg, #f97316, #ea580c);
     padding: 8px 20px;
@@ -164,20 +108,6 @@
 .logout-btn:hover {
     background: #fee2e2;
     color: #dc2626;
-}
-
-.nav-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    cursor: pointer;
-    border: 2px solid #fed7aa;
-    transition: border-color 0.2s;
-}
-
-.nav-avatar:hover {
-    border-color: #f97316;
 }
 
 /* 分类下拉菜单 */
