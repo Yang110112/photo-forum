@@ -135,6 +135,8 @@ export default function Header() {
                         <>
                             <div className="mobile-menu-divider"></div>
                             <Link to="/create" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>📷 发布作品</Link>
+                            <Link to="/certification" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>✅ 摄影师认证</Link>
+                            <Link to="/bookings" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>📅 约拍管理</Link>
                             <Link to="/messages" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>💬 私信</Link>
                             <Link to="/profile" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>👤 个人中心</Link>
                         </>

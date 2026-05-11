@@ -11,6 +11,8 @@ import PostDetail from '../pages/PostDetail';
 import CreatePost from '../pages/CreatePost';
 import Profile from '../pages/Profile';
 import Messages from '../pages/Messages';
+import PhotographerCert from '../pages/PhotographerCert';
+import BookingRequests from '../pages/BookingRequests';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useSelector(state => state.auth);
@@ -27,6 +29,8 @@ const routes = [
             { path: '/create', element: <ProtectedRoute><CreatePost /></ProtectedRoute> },
             { path: '/profile', element: <ProtectedRoute><Profile /></ProtectedRoute> },
             { path: '/messages', element: <ProtectedRoute><Messages /></ProtectedRoute> },
+            { path: '/certification', element: <ProtectedRoute><PhotographerCert /></ProtectedRoute> },
+            { path: '/bookings', element: <ProtectedRoute><BookingRequests /></ProtectedRoute> },
             { path: '*', element: <Navigate to="/" replace /> },
         ]
     },

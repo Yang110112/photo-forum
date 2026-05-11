@@ -22,9 +22,23 @@ export default function CreatePost() {
     tags: ''
   });
   const [mediaFiles, setMediaFiles] = useState([]);
+  const [openForBooking, setOpenForBooking] = useState(false);
+  const [bookingInfo, setBookingInfo] = useState({
+    location: '',
+    duration: '',
+    fee: ''
+  });
   const [loading, setLoading] = useState(false);
   const { user } = useSelector(state => state.auth);
   const navigate = useNavigate();
+
+  // 检查用户是否是认证摄影师
+  const isCertifiedPhotographer = () => {
+    if (!user) return false;
+    const savedCerts = JSON.parse(localStorage.getItem('photographerCerts') || '{}');
+    const userCert = savedCerts[user.username];
+    return userCert && userCert.status === 'approved';
+  };
 
   // 如果未登录，跳转到登录页
   useEffect(() => {
@@ -72,7 +86,11 @@ export default function CreatePost() {
         likeCount: 0,
         commentCount: 0,
         viewCount: 0,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        // 约拍相关
+        openForBooking: isCertifiedPhotographer() ? openForBooking : false,
+        bookingInfo: isCertifiedPhotographer() && openForBooking ? bookingInfo : null,
+        isCertified: isCertifiedPhotographer()
       };
 
       // 保存到 localStorage
@@ -141,6 +159,56 @@ export default function CreatePost() {
         onChange={(e) => setForm({ ...form, content: e.target.value })}
       />
 
+      {/* 约拍选项 - 仅认证摄影师可见 */}
+      {isCertifiedPhotographer() && (
+        <div className="booking-section">
+          <div className="booking-toggle">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={openForBooking}
+                onChange={(e) => setOpenForBooking(e.target.checked)}
+              />
+              <span className="toggle-switch"></span>
+              <span className="toggle-text">📷 开启约拍</span>
+            </label>
+            <p className="booking-hint">开启后，普通用户可以向您发起约拍请求</p>
+          </div>
+
+          {openForBooking && (
+            <div className="booking-info">
+              <h4>约拍信息</h4>
+              <input
+                type="text"
+                placeholder="拍摄地点（如：北京朝阳区）"
+                value={bookingInfo.location}
+                onChange={(e) => setBookingInfo({ ...bookingInfo, location: e.target.value })}
+                className="booking-input"
+              />
+              <select
+                value={bookingInfo.duration}
+                onChange={(e) => setBookingInfo({ ...bookingInfo, duration: e.target.value })}
+                className="booking-select"
+              >
+                <option value="">选择拍摄时长</option>
+                <option value="0.5">0.5小时</option>
+                <option value="1">1小时</option>
+                <option value="2">2小时</option>
+                <option value="4">半天（4小时）</option>
+                <option value="8">全天（8小时）</option>
+              </select>
+              <input
+                type="text"
+                placeholder="收费标准（如：面议 / 500元/小时）"
+                value={bookingInfo.fee}
+                onChange={(e) => setBookingInfo({ ...bookingInfo, fee: e.target.value })}
+                className="booking-input"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 发布按钮 */}
       <button
         onClick={submit}
@@ -159,6 +227,12 @@ export default function CreatePost() {
           <li>视频格式：MP4, WebM, MOV</li>
           <li>建议图片大小不超过10MB</li>
           <li>视频建议时长控制在3分钟以内</li>
+          {isCertifiedPhotographer() && (
+            <>
+              <li>开启"约拍"功能后，用户可以向您发起约拍请求</li>
+              <li>请填写准确的拍摄地点和收费标准</li>
+            </>
+          )}
         </ul>
       </div>
     </div>
