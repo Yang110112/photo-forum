@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { getPostById } from '../api/posts';
 import { getCommentsByPost, createComment } from '../api/comments';
+import { message } from 'antd';
+import { getPostById, likePost, unlikePost } from '../api/posts';
 import '../css/PostDetail.css';
 
 // 分类数据
@@ -18,7 +19,7 @@ const categories = [
 export default function PostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, token } = useSelector(state => state.auth);
+  const { user } = useSelector(state => state.auth);
 
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -27,13 +28,6 @@ export default function PostDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [bookingForm, setBookingForm] = useState({
-    location: '',
-    date: '',
-    message: ''
-  });
-  const [submittingBooking, setSubmittingBooking] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -45,33 +39,9 @@ export default function PostDetail() {
         setPost(postRes.data.data.post);
         setComments(commentRes.data.comments || []);
         setLikeCount(postRes.data.data.post?.likeCount || 0);
+        setLiked(postRes.data.data.post?.isLiked || false);
       } catch (error) {
-        console.log('API failed, loading from localStorage');
-
-        // 从localStorage加载帖子
-        const savedPosts = localStorage.getItem('forumPosts');
-        if (savedPosts) {
-          try {
-            const posts = JSON.parse(savedPosts);
-            const localPost = posts.find(p => p._id === id);
-            if (localPost) {
-              setPost(localPost);
-              setLikeCount(localPost.likeCount || 0);
-            }
-          } catch (e) {
-            console.error('Failed to parse saved posts');
-          }
-        }
-
-        // 从localStorage加载评论
-        const savedComments = localStorage.getItem(`comments_${id}`);
-        if (savedComments) {
-          try {
-            setComments(JSON.parse(savedComments));
-          } catch (e) {
-            console.error('Failed to parse saved comments');
-          }
-        }
+        message.error('加载失败');
       } finally {
         setLoading(false);
       }
@@ -79,177 +49,73 @@ export default function PostDetail() {
     fetchAll();
   }, [id]);
 
-  // 保存评论到localStorage
-  const saveComments = (newComments) => {
-    localStorage.setItem(`comments_${id}`, JSON.stringify(newComments));
-    setComments(newComments);
-
-    // 更新帖子的评论数
-    const savedPosts = localStorage.getItem('forumPosts');
-    if (savedPosts) {
-      try {
-        const posts = JSON.parse(savedPosts);
-        const updatedPosts = posts.map(p => {
-          if (p._id === id) {
-            return { ...p, commentCount: newComments.length };
-          }
-          return p;
-        });
-        localStorage.setItem('forumPosts', JSON.stringify(updatedPosts));
-      } catch (e) {
-        console.error('Failed to update post comment count');
-      }
-    }
-  };
-
   const handleComment = async () => {
     if (!commentText.trim()) return;
     if (!user) {
-      alert('请先登录后再评论');
+      message.warning('请先登录后再评论');
       navigate('/login');
       return;
     }
-
     setSubmitting(true);
-
     try {
-      const newComment = {
-        _id: `comment-${Date.now()}`,
-        content: commentText.trim(),
-        author: {
-          username: user.username,
-          avatar: user.avatar || ''
-        },
-        createdAt: new Date().toISOString(),
-        likeCount: 0
-      };
-
-      // 保存到API
-      try {
-        const res = await createComment({ content: commentText, post: id });
-        saveComments([newComment, ...comments]);
-      } catch (apiError) {
-        // API失败，保存到localStorage
-        console.log('Saving comment to localStorage');
-        saveComments([newComment, ...comments]);
-      }
-
+      await createComment({ content: commentText, post: id });
+      const res = await getCommentsByPost(id);
+      setComments(res.data.comments || []);
       setCommentText('');
-    } catch (error) {
-      alert('评论失败，请重试');
+      message.success('评论成功');
+    } catch (err) {
+      message.error('评论失败，请重试');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!user) {
-      alert('请先登录后再点赞');
-      navigate('/login');
-      return;
+        message.warning('请先登录后再点赞');
+        navigate('/login');
+        return;
     }
-
-    setLiked(!liked);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
-
-    // 保存点赞状态到localStorage
-    const likes = JSON.parse(localStorage.getItem('userLikes') || '[]');
-    if (liked) {
-      const updatedLikes = likes.filter(l => l !== id);
-      localStorage.setItem('userLikes', JSON.stringify(updatedLikes));
-    } else {
-      likes.push(id);
-      localStorage.setItem('userLikes', JSON.stringify(likes));
-    }
-  };
-
-  const handleCommentLike = (commentId) => {
-    const updatedComments = comments.map(c => {
-      if (c._id === commentId) {
-        return { ...c, likeCount: (c.likeCount || 0) + 1 };
-      }
-      return c;
-    });
-    saveComments(updatedComments);
-  };
-
-  // 处理约拍请求
-  const handleBookingRequest = async () => {
-    if (!user) {
-      alert('请先登录');
-      navigate('/login');
-      return;
-    }
-    if (!bookingForm.location.trim()) {
-      alert('请填写拍摄地点');
-      return;
-    }
-    if (!bookingForm.date) {
-      alert('请选择期望时间');
-      return;
-    }
-
-    setSubmittingBooking(true);
     try {
-      // 保存约拍请求
-      const savedRequests = JSON.parse(localStorage.getItem('bookingRequests') || '{}');
-
-      const newRequest = {
-        id: `booking-${Date.now()}`,
-        postId: post._id,
-        postTitle: post.title,
-        photographerName: post.author?.username,
-        photographerAvatar: post.author?.avatar,
-        requesterName: user.username,
-        requesterAvatar: user.avatar,
-        proposedLocation: bookingForm.location,
-        proposedDate: bookingForm.date,
-        message: bookingForm.message,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
-
-      // 添加到收到的请求（摄影师端）
-      if (!savedRequests.received) savedRequests.received = [];
-      savedRequests.received.push(newRequest);
-
-      // 添加到发出的请求（用户端）
-      if (!savedRequests.sent) savedRequests.sent = [];
-      savedRequests.sent.push(newRequest);
-
-      localStorage.setItem('bookingRequests', JSON.stringify(savedRequests));
-
-      alert('约拍请求已发送！请等待摄影师审核');
-      setShowBookingModal(false);
-      setBookingForm({ location: '', date: '', message: '' });
+        if (liked) {
+            await unlikePost(id);
+            setLiked(false);
+            setLikeCount(prev => prev - 1);
+        } else {
+            await likePost(id);
+            setLiked(true);
+            setLikeCount(prev => prev + 1);
+        }
     } catch (err) {
-      alert('发送失败，请重试');
-    } finally {
-      setSubmittingBooking(false);
+        message.error(err.response?.data?.message || '操作失败');
     }
-  };
+};
 
   const avatarUrl = (username, avatar) => {
     if (avatar && !avatar.startsWith('/uploads')) return avatar;
-    return `https://ui-avatars.com/api/?name=${username || 'U'}&background=random&color=fff`;
+    return `https://ui-avatars.com/api/?name=${username || 'U'}&background=f97316&color=fff`;
   };
 
-  // 格式化时间
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
-
     if (diff < 60000) return '刚刚';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
     return date.toLocaleDateString('zh-CN');
   };
 
-  // 获取分类信息
-  const getCategoryInfo = (categorySlug) => {
-    return categories.find(c => c.slug === categorySlug) || { name: categorySlug, emoji: '📷' };
+  const getCategoryInfo = (category) => {
+    if (!category) return { name: '未分类', emoji: '📷' };
+    const slug = typeof category === 'string' ? category : category.slug || category.name;
+    const found = categories.find(c => c.slug === slug);
+    if (found) return found;
+    if (typeof category === 'object' && category.name) {
+      return { name: category.name, emoji: '📷' };
+    }
+    return { name: slug, emoji: '📷' };
   };
 
   if (loading) return (
@@ -271,11 +137,10 @@ export default function PostDetail() {
 
   return (
     <div className="pd-container">
-      {/* 帖子主体 */}
       <div className="pd-card">
         <div className="pd-header">
-          <button className="pd-back" onClick={() => navigate(-1)}>
-            ← 返回
+          <button className="pd-back" onClick={() => navigate('/forum')}>
+              ← 返回
           </button>
           <div className="pd-tags">
             <span className="pd-category">
@@ -289,6 +154,29 @@ export default function PostDetail() {
 
         <h1 className="pd-title">{post.title}</h1>
 
+        {/* 图片/视频展示 */}
+        {post.images && post.images.length > 0 && (
+          <div className="pd-images">
+            {post.images.map((item, index) => (
+              item.startsWith('data:video') ? (
+                <video
+                  key={index}
+                  src={item}
+                  controls
+                  className="pd-image"
+                />
+              ) : (
+                <img
+                  key={index}
+                  src={item}
+                  alt={`${post.title} - ${index + 1}`}
+                  className="pd-image"
+                />
+              )
+            ))}
+          </div>
+        )}
+
         <div className="pd-meta">
           <img
             className="pd-avatar"
@@ -301,25 +189,11 @@ export default function PostDetail() {
           </div>
         </div>
 
-        {/* 媒体展示 */}
-        {post.media && post.media.length > 0 && (
-          <div className="pd-media-gallery">
-            {post.media.map((media, index) => (
-              media.type?.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(media.url) ? (
-                <video key={index} src={media.url} controls className="pd-media-item" />
-              ) : (
-                <img key={index} src={media.url} alt={`Media ${index + 1}`} className="pd-media-item" />
-              )
-            ))}
-          </div>
-        )}
-
         <div
           className="pd-content"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
-        {/* 互动栏 */}
         <div className="pd-actions">
           <button
             className={`pd-action-btn ${liked ? 'liked' : ''}`}
@@ -333,38 +207,7 @@ export default function PostDetail() {
           <button className="pd-action-btn">
             👁 {post.viewCount || 0} 浏览
           </button>
-          {/* 约拍按钮 - 仅认证摄影师且开启约拍时显示 */}
-          {post.openForBooking && post.author?.username !== user?.username && (
-            <button
-              className="pd-action-btn booking-btn"
-              onClick={() => setShowBookingModal(true)}
-            >
-              📷 约拍
-            </button>
-          )}
         </div>
-
-        {/* 约拍信息展示 */}
-        {post.openForBooking && post.bookingInfo && (
-          <div className="pd-booking-info">
-            <h4>📷 可约拍</h4>
-            {post.bookingInfo.location && (
-              <p>📍 {post.bookingInfo.location}</p>
-            )}
-            {post.bookingInfo.duration && (
-              <p>⏱️ 时长：{
-                post.bookingInfo.duration === '0.5' ? '0.5小时' :
-                post.bookingInfo.duration === '1' ? '1小时' :
-                post.bookingInfo.duration === '2' ? '2小时' :
-                post.bookingInfo.duration === '4' ? '半天（4小时）' :
-                post.bookingInfo.duration === '8' ? '全天（8小时）' : post.bookingInfo.duration
-              }</p>
-            )}
-            {post.bookingInfo.fee && (
-              <p>💰 {post.bookingInfo.fee}</p>
-            )}
-          </div>
-        )}
       </div>
 
       {/* 评论区 */}
@@ -373,7 +216,6 @@ export default function PostDetail() {
           💬 评论 ({comments.length})
         </h3>
 
-        {/* 评论输入框 */}
         <div className="pd-comment-input">
           {user ? (
             <>
@@ -385,13 +227,13 @@ export default function PostDetail() {
               <div className="pd-input-wrap">
                 <textarea
                   className="pd-textarea"
-                  placeholder="写下你的评论... (所有用户都可以评论)"
+                  placeholder="写下你的评论..."
                   value={commentText}
                   onChange={e => setCommentText(e.target.value)}
                   rows="3"
                 />
                 <div className="pd-input-actions">
-                  <span className="pd-hint">评论是一种分享，让更多人看到你的想法</span>
+                  <span className="pd-hint">友善交流，分享你的真实感受</span>
                   <button
                     className="pd-submit"
                     onClick={handleComment}
@@ -406,22 +248,12 @@ export default function PostDetail() {
             <div className="pd-login-prompt">
               <p>
                 <span onClick={() => navigate('/login')} className="pd-login-link">登录</span>
-                后参与评论，所有登录用户都可以发表评论！
+                后参与评论
               </p>
-              <div className="pd-anonymous-comment">
-                <textarea
-                  className="pd-textarea"
-                  placeholder="未登录状态下也可以写下评论（登录后发布）"
-                  disabled
-                  rows="2"
-                />
-                <button disabled>请先登录</button>
-              </div>
             </div>
           )}
         </div>
 
-        {/* 评论列表 */}
         <div className="pd-comments">
           {comments.length === 0 ? (
             <div className="pd-no-comment">
@@ -443,13 +275,6 @@ export default function PostDetail() {
                       <span className="pd-comment-author">{c.author?.username || '匿名用户'}</span>
                       <span className="pd-comment-date">{formatTime(c.createdAt)}</span>
                     </div>
-                    <button
-                      className="pd-comment-like"
-                      onClick={() => handleCommentLike(c._id)}
-                      title="点赞评论"
-                    >
-                      👍 {c.likeCount || 0}
-                    </button>
                   </div>
                   <p className="pd-comment-content">{c.content}</p>
                 </div>
@@ -457,81 +282,7 @@ export default function PostDetail() {
             ))
           )}
         </div>
-
-        {/* 评论提示 */}
-        <div className="pd-comment-tip">
-          <h4>💡 评论规范</h4>
-          <ul>
-            <li>尊重他人，友善交流</li>
-            <li>分享你对作品的真实感受</li>
-            <li>禁止发布广告、垃圾信息</li>
-            <li>所有注册用户都可以发表评论</li>
-          </ul>
-        </div>
       </div>
-
-      {/* 约拍弹窗 */}
-      {showBookingModal && (
-        <div className="booking-modal-overlay" onClick={() => setShowBookingModal(false)}>
-          <div className="booking-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="booking-modal-header">
-              <h3>📷 发起约拍请求</h3>
-              <button className="booking-modal-close" onClick={() => setShowBookingModal(false)}>×</button>
-            </div>
-            <div className="booking-modal-body">
-              <p className="booking-photographer-info">
-                向 <strong>{post.author?.username}</strong> 发起约拍请求
-              </p>
-
-              <div className="booking-form-group">
-                <label>期望拍摄地点 *</label>
-                <input
-                  type="text"
-                  placeholder="请输入期望的拍摄地点"
-                  value={bookingForm.location}
-                  onChange={(e) => setBookingForm({ ...bookingForm, location: e.target.value })}
-                />
-              </div>
-
-              <div className="booking-form-group">
-                <label>期望拍摄时间 *</label>
-                <input
-                  type="date"
-                  value={bookingForm.date}
-                  onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-
-              <div className="booking-form-group">
-                <label>留言（可选）</label>
-                <textarea
-                  placeholder="可以告诉摄影师您的拍摄需求、风格偏好等"
-                  value={bookingForm.message}
-                  onChange={(e) => setBookingForm({ ...bookingForm, message: e.target.value })}
-                  rows="3"
-                />
-              </div>
-
-              <div className="booking-modal-footer">
-                <button
-                  className="booking-cancel"
-                  onClick={() => setShowBookingModal(false)}
-                >
-                  取消
-                </button>
-                <button
-                  className="booking-submit"
-                  onClick={handleBookingRequest}
-                  disabled={submittingBooking}
-                >
-                  {submittingBooking ? '发送中...' : '发送约拍请求'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

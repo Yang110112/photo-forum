@@ -61,3 +61,21 @@
     box-shadow: 0 6px 20px rgba(249,115,22,0.45);
     background: linear-gradient(135deg, #f97316, #ef4444);
 }
+
+.login-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #78716c;
+}
+
+.login-link {
+    color: #f97316;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-link:hover {
+    text-decoration: underline;
+    color: #ea580c;
+}

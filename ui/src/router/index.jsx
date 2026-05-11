@@ -11,8 +11,7 @@ import PostDetail from '../pages/PostDetail';
 import CreatePost from '../pages/CreatePost';
 import Profile from '../pages/Profile';
 import Messages from '../pages/Messages';
-import PhotographerCert from '../pages/PhotographerCert';
-import BookingRequests from '../pages/BookingRequests';
+import MyPosts from '../pages/MyPosts';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useSelector(state => state.auth);
@@ -21,16 +20,15 @@ const ProtectedRoute = ({ children }) => {
 
 const routes = [
     {
-        element: <Layout />,
+        element: <ProtectedRoute><Layout /></ProtectedRoute>,
         children: [
             { path: '/', element: <Home /> },
             { path: '/forum', element: <Forum /> },
             { path: '/post/:id', element: <PostDetail /> },
-            { path: '/create', element: <ProtectedRoute><CreatePost /></ProtectedRoute> },
-            { path: '/profile', element: <ProtectedRoute><Profile /></ProtectedRoute> },
-            { path: '/messages', element: <ProtectedRoute><Messages /></ProtectedRoute> },
-            { path: '/certification', element: <ProtectedRoute><PhotographerCert /></ProtectedRoute> },
-            { path: '/bookings', element: <ProtectedRoute><BookingRequests /></ProtectedRoute> },
+            { path: '/create', element: <CreatePost /> },
+            { path: '/profile', element: <Profile /> },
+            { path: '/messages', element: <Messages /> },
+            { path: '/my-posts', element: <MyPosts /> },
             { path: '*', element: <Navigate to="/" replace /> },
         ]
     },

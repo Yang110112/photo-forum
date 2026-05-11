@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/DailyHighlightModal.css';
 
 export default function DailyHighlightModal({ isOpen, onClose, highlightPost }) {
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const imgRef = useRef(null);
 
   useEffect(() => {
     if (isOpen && highlightPost) {
       setVisible(true);
+      setImgLoaded(false);
     }
   }, [isOpen, highlightPost]);
 
@@ -24,11 +27,8 @@ export default function DailyHighlightModal({ isOpen, onClose, highlightPost }) 
 
   if (!isOpen || !highlightPost) return null;
 
-  // 获取媒体类型
-  const isVideo = highlightPost.media?.some(m => m.type?.startsWith('video/')) ||
-                   highlightPost.media?.some(m => /\.(mp4|webm|ogg|mov)$/i.test(m.url));
-  const images = highlightPost.media?.filter(m => !m.type?.startsWith('video/') && !/\.(mp4|webm|ogg|mov)$/i.test(m.url)) || [];
-  const videos = highlightPost.media?.filter(m => m.type?.startsWith('video/') || /\.(mp4|webm|ogg|mov)$/i.test(m.url)) || [];
+  const firstImage = highlightPost.images?.[0];
+  const isVideo = firstImage?.startsWith('data:video');
 
   return (
     <div className="modal-overlay" onClick={handleClose}>
@@ -38,19 +38,28 @@ export default function DailyHighlightModal({ isOpen, onClose, highlightPost }) 
         <div className="modal-badge">🏆 今日热门作品</div>
 
         <div className="modal-media-container">
-          {isVideo && videos.length > 0 ? (
-            <video
-              className="modal-media"
-              src={videos[0].url}
-              controls
-              autoPlay
-            />
-          ) : images.length > 0 ? (
-            <img
-              className="modal-media"
-              src={images[0].url}
-              alt={highlightPost.title}
-            />
+          {firstImage ? (
+            isVideo ? (
+              <video
+                className="modal-media"
+                src={firstImage}
+                controls
+                preload="none"
+              />
+            ) : (
+              <>
+                {!imgLoaded && <div className="modal-no-media">加载中...</div>}
+                <img
+                  ref={imgRef}
+                  className="modal-media"
+                  src={firstImage}
+                  alt={highlightPost.title}
+                  loading="lazy"
+                  onLoad={() => setImgLoaded(true)}
+                  style={{ display: imgLoaded ? 'block' : 'none' }}
+                />
+              </>
+            )
           ) : (
             <div className="modal-no-media">暂无预览图</div>
           )}
@@ -61,9 +70,12 @@ export default function DailyHighlightModal({ isOpen, onClose, highlightPost }) 
 
           <div className="modal-author">
             <img
-              src={highlightPost.author?.avatar || `https://ui-avatars.com/api/?name=${highlightPost.author?.username}&background=random&color=fff`}
-              alt={highlightPost.author?.username}
-              className="modal-avatar"
+                src={highlightPost.author?.avatar || `https://ui-avatars.com/api/?name=${highlightPost.author?.username}&background=f97316&color=fff`}
+                alt={highlightPost.author?.username}
+                className="modal-avatar"
+                onError={(e) => {
+                    e.target.src = `https://ui-avatars.com/api/?name=${highlightPost.author?.username}&background=f97316&color=fff`;
+                }}
             />
             <div>
               <span className="modal-username">{highlightPost.author?.username}</span>

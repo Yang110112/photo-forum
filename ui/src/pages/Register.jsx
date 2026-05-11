@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { register } from '../api/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { message } from 'antd';
 import '../css/Register.css';
 
 export default function Register() {
@@ -11,11 +12,11 @@ export default function Register() {
     e.preventDefault();
     try {
       await register(form);
-      alert('注册成功，去登录');
+      message.success('注册成功，请登录');
       navigate('/login');
     } catch (err) {
       const msg = err.response?.data?.errors?.[0]?.message || err.response?.data?.message || '注册失败';
-      alert(msg);
+      message.error(msg);
     }
   };
 
@@ -37,7 +38,6 @@ export default function Register() {
           className="register-input"
           onChange={(e) => setForm({ ...form, email: e.target.value })}
         />
-        {/* 密码 */}  
         <input
           type="password"
           placeholder="密码"
@@ -47,6 +47,9 @@ export default function Register() {
         />
         <button type="submit" className="register-button">注册</button>
       </form>
+      <p className="register-footer">
+        已有账号？<Link to="/login" className="register-link">返回登录</Link>
+      </p>
     </div>
   );
 }
