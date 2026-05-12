@@ -35,6 +35,11 @@ const postSchema = new mongoose.Schema({
     trim: true,
     maxlength: 20
   }],
+   media: [{
+    url: { type: String },
+    type: { type: String },
+    name: { type: String }
+  }],
   images: [{
     type: String,
     trim: true
@@ -60,6 +65,10 @@ const postSchema = new mongoose.Schema({
     default: 'published',
     index: true
   },
+  openForBooking: { type: Boolean, default: false },
+  bookingLocation: { type: String, default: '' },
+  bookingDuration: { type: String, default: '' },
+  bookingFee: { type: String, default: '' },
   isDeleted: {
     type: Boolean,
     default: false

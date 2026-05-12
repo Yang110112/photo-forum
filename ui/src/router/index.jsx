@@ -12,6 +12,8 @@ import CreatePost from '../pages/CreatePost';
 import Profile from '../pages/Profile';
 import Messages from '../pages/Messages';
 import MyPosts from '../pages/MyPosts';
+import PhotographerCert from '../pages/PhotographerCert';
+import BookingRequests from '../pages/BookingRequests';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useSelector(state => state.auth);
@@ -29,6 +31,10 @@ const routes = [
             { path: '/profile', element: <Profile /> },
             { path: '/messages', element: <Messages /> },
             { path: '/my-posts', element: <MyPosts /> },
+            // 摄影师认证页面
+            { path: '/certification', element: <PhotographerCert /> },
+            // 约拍管理页面
+            { path: '/bookings', element: <BookingRequests /> },
             { path: '*', element: <Navigate to="/" replace /> },
         ]
     },

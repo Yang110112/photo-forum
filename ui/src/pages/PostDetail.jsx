@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { getCommentsByPost, createComment } from '../api/comments';
 import { message } from 'antd';
 import { getPostById, likePost, unlikePost } from '../api/posts';
+import { createBooking } from '../api/bookings';
 import '../css/PostDetail.css';
 
 // 分类数据
@@ -28,6 +29,15 @@ export default function PostDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+
+  // 约拍弹窗状态
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingForm, setBookingForm] = useState({
+    proposedLocation: '',
+    proposedDate: '',
+    message: '',
+  });
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -89,7 +99,37 @@ export default function PostDetail() {
     } catch (err) {
         message.error(err.response?.data?.message || '操作失败');
     }
-};
+  };
+
+  // 提交约拍请求
+  const handleBookingSubmit = async () => {
+    if (!bookingForm.proposedLocation.trim()) {
+      message.warning('请填写期望拍摄地点');
+      return;
+    }
+    if (!bookingForm.proposedDate) {
+      message.warning('请选择期望拍摄日期');
+      return;
+    }
+
+    setBookingSubmitting(true);
+    try {
+      await createBooking({
+        post: id,
+        photographer: post.author?._id || post.author,
+        proposedLocation: bookingForm.proposedLocation,
+        proposedDate: bookingForm.proposedDate,
+        message: bookingForm.message,
+      });
+      message.success('约拍请求已发送，请等待摄影师确认！');
+      setShowBookingModal(false);
+      setBookingForm({ proposedLocation: '', proposedDate: '', message: '' });
+    } catch (err) {
+      message.error(err.response?.data?.message || '约拍请求发送失败，请重试');
+    } finally {
+      setBookingSubmitting(false);
+    }
+  };
 
   const avatarUrl = (username, avatar) => {
     if (avatar && !avatar.startsWith('/uploads')) return avatar;
@@ -117,6 +157,9 @@ export default function PostDetail() {
     }
     return { name: slug, emoji: '📷' };
   };
+
+  // 判断是否可以约拍（不是自己的帖子 + 帖子开启了约拍）
+  const canBook = user && post?.openForBooking && post?.author?._id !== user?._id && post?.author !== user?._id;
 
   if (loading) return (
     <div className="pd-loading">
@@ -184,7 +227,13 @@ export default function PostDetail() {
             alt={post.author?.username}
           />
           <div className="pd-author-info">
-            <span className="pd-author">{post.author?.username || '匿名用户'}</span>
+            <span className="pd-author">
+              {post.author?.username || '匿名用户'}
+              {/* 认证摄影师标识 */}
+              {post.author?.certStatus === 'approved' && (
+                <span style={{ marginLeft: 6, fontSize: '0.8rem', color: '#0ea5e9' }} title="认证摄影师">✅</span>
+              )}
+            </span>
             <span className="pd-date">{formatTime(post.createdAt)}</span>
           </div>
         </div>
@@ -193,6 +242,22 @@ export default function PostDetail() {
           className="pd-content"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        {/* 约拍信息展示区 */}
+        {post.openForBooking && (
+          <div className="pd-booking-info">
+            <h4>📷 可约拍</h4>
+            {post.bookingLocation && (
+              <p>📍 拍摄地点：{post.bookingLocation}</p>
+            )}
+            {post.bookingDuration && (
+              <p>⏱ 拍摄时长：{post.bookingDuration}小时</p>
+            )}
+            {post.bookingFee && (
+              <p>💰 收费标准：{post.bookingFee}</p>
+            )}
+          </div>
+        )}
 
         <div className="pd-actions">
           <button
@@ -207,6 +272,15 @@ export default function PostDetail() {
           <button className="pd-action-btn">
             👁 {post.viewCount || 0} 浏览
           </button>
+          {/* 约拍按钮 - 仅当帖子开启约拍且不是自己的帖子时显示 */}
+          {canBook && (
+            <button
+              className="pd-action-btn booking-btn"
+              onClick={() => setShowBookingModal(true)}
+            >
+              📷 约拍
+            </button>
+          )}
         </div>
       </div>
 
@@ -283,6 +357,66 @@ export default function PostDetail() {
           )}
         </div>
       </div>
+
+      {/* 约拍弹窗 */}
+      {showBookingModal && (
+        <div className="booking-modal-overlay" onClick={() => setShowBookingModal(false)}>
+          <div className="booking-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="booking-modal-header">
+              <h3>📷 发起约拍</h3>
+              <button className="booking-modal-close" onClick={() => setShowBookingModal(false)}>✕</button>
+            </div>
+            <div className="booking-modal-body">
+              <div className="booking-photographer-info">
+                向摄影师 <strong>{post.author?.username}</strong> 发起约拍请求
+              </div>
+
+              <div className="booking-form-group">
+                <label>📍 期望拍摄地点 *</label>
+                <input
+                  type="text"
+                  placeholder="如：北京朝阳区奥林匹克公园"
+                  value={bookingForm.proposedLocation}
+                  onChange={(e) => setBookingForm({ ...bookingForm, proposedLocation: e.target.value })}
+                />
+              </div>
+
+              <div className="booking-form-group">
+                <label>📅 期望拍摄日期 *</label>
+                <input
+                  type="date"
+                  value={bookingForm.proposedDate}
+                  onChange={(e) => setBookingForm({ ...bookingForm, proposedDate: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              <div className="booking-form-group">
+                <label>📝 留言（可选）</label>
+                <textarea
+                  placeholder="介绍一下你的拍摄需求、想要的风格等..."
+                  value={bookingForm.message}
+                  onChange={(e) => setBookingForm({ ...bookingForm, message: e.target.value })}
+                  rows="4"
+                />
+              </div>
+
+              <div className="booking-modal-footer">
+                <button className="booking-cancel" onClick={() => setShowBookingModal(false)}>
+                  取消
+                </button>
+                <button
+                  className="booking-submit"
+                  onClick={handleBookingSubmit}
+                  disabled={bookingSubmitting}
+                >
+                  {bookingSubmitting ? '发送中...' : '发送约拍请求'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

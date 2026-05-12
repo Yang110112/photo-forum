@@ -21,6 +21,8 @@ const postRoutes = require('./routes/posts');
 const commentRoutes = require('./routes/comments');
 const categoryRoutes = require('./routes/categories');
 const favoriteRoutes = require('./routes/favorites');
+const certificationRouter = require('./routes/certification');
+const bookingRouter = require('./routes/bookings');
 
 // 导入中间件
 const { errorHandler } = require('./middleware/errorHandler');
@@ -34,6 +36,7 @@ app.use(helmet());
 app.use(xss());
 app.use(mongoSanitize());
 app.use(hpp());
+
 
 // CORS配置
 app.use(cors({
@@ -55,6 +58,8 @@ app.use('/api/v1/posts', postRoutes);
 app.use('/api/v1/comments', commentRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/favorites', favoriteRoutes);
+app.use('/api/v1/certification', certificationRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
 // 健康检查
 app.get('/api/v1/health', (req, res) => {
