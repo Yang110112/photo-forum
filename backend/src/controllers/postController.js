@@ -26,6 +26,9 @@ exports.createPost = async (req, res, next) => {
       return next(new AppError('分类不存在', 404));
     }
 
+    // 只有认证摄影师才能开启约拍
+    const canOpenBooking = req.user.certStatus === 'approved' && openForBooking === true;
+
     // 创建帖子
     const post = await Post.create({
       title,
@@ -34,6 +37,10 @@ exports.createPost = async (req, res, next) => {
       tags: tags || [],
       author: req.user._id,
       images: images || [],
+      openForBooking: canOpenBooking,
+      bookingLocation: canOpenBooking ? (bookingLocation || '') : '',
+      bookingDuration: canOpenBooking ? (bookingDuration || '') : '',
+      bookingFee: canOpenBooking ? (bookingFee || '') : '',
     });
 
     // 更新分类帖子数
@@ -132,7 +139,7 @@ exports.getPostById = async (req, res, next) => {
     const { id } = req.params;
 
     const post = await Post.findById(id)
-      .populate('author', 'username avatar bio')
+      .populate('author', 'username avatar bio certStatus')
       .populate('category', 'name slug');
 
     if (!post) {
