@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
 import '../css/Messages.css';
 
 // 模拟用户数据
@@ -86,7 +87,7 @@ export default function Messages() {
   // 添加好友
   const addFriend = (friendUser) => {
     if (friends.find(f => f._id === friendUser._id)) {
-      alert('已经是好友了');
+      message.warning('已经是好友了');
       return;
     }
 
@@ -109,7 +110,7 @@ export default function Messages() {
 
     saveConversations([...conversations, newConversation]);
     setShowAddFriend(false);
-    alert(`已添加 ${friendUser.username} 为好友`);
+    message.success(`已添加 ${friendUser.username} 为好友`);
   };
 
   // 开始聊天

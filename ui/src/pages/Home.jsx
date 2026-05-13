@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DailyHighlightModal from '../components/DailyHighlightModal';
 import { getPosts } from '../api/posts';
+import { useSelector } from 'react-redux';
 import '../css/Home.css';
 
 export default function HomePage() {
@@ -9,6 +10,7 @@ export default function HomePage() {
     const [highlightPost, setHighlightPost] = useState(null);
     const [hotPosts, setHotPosts] = useState([]);
     const navigate = useNavigate();
+    const { user } = useSelector(state => state.auth);
 
     useEffect(() => {
         // 获取热门作品
@@ -19,7 +21,7 @@ export default function HomePage() {
 
                 // 每日热门弹窗
                 const today = new Date().toDateString();
-                const lastShown = localStorage.getItem('highlightShownDate');
+                const lastShown = localStorage.getItem(`highlightShownDate_${user?._id}`);
                 if (lastShown !== today && posts.length > 0) {
                     setHighlightPost(posts[0]);
                     setTimeout(() => setShowHighlight(true), 500);
@@ -30,7 +32,7 @@ export default function HomePage() {
 
     const handleCloseHighlight = () => {
         setShowHighlight(false);
-        localStorage.setItem('highlightShownDate', new Date().toDateString());
+        localStorage.setItem(`highlightShownDate_${user?._id}`, new Date().toDateString());
     };
 
     return (

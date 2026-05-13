@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { message } from 'antd';
 import { getReceivedBookings, getSentBookings, updateBookingStatus } from '../api/bookings';
 import '../css/BookingRequests.css';
 
@@ -48,9 +49,9 @@ export default function BookingRequests() {
       setReceivedRequests(prev =>
         prev.map(r => r._id === requestId ? { ...r, status: 'accepted' } : r)
       );
-      alert('已接受约拍请求！');
+      message.success('已接受约拍请求！');
     } catch (err) {
-      alert(err.response?.data?.message || '操作失败');
+      message.error(err.response?.data?.message || '操作失败');
     }
   };
 
@@ -60,9 +61,9 @@ export default function BookingRequests() {
       setReceivedRequests(prev =>
         prev.map(r => r._id === requestId ? { ...r, status: 'rejected' } : r)
       );
-      alert('已拒绝约拍请求');
+      message.success('已拒绝约拍请求');
     } catch (err) {
-      alert(err.response?.data?.message || '操作失败');
+      message.error(err.response?.data?.message || '操作失败');
     }
   };
 

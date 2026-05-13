@@ -386,3 +386,43 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== 摄影大师认证标签 - 绿紫幻境流光版 ===== */
+.cert-badge-forum {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 12px;
+    /* 萤石绿 -> 科技蓝 -> 幻影紫 的动态渐变 */
+    background: linear-gradient(135deg, #2af598 0%, #009efd 50%, #b721ff 100%);
+    background-size: 200% auto;
+    animation: masterFlow 4s ease-in-out infinite;
+    color: #ffffff;
+    border-radius: 20px; /* 改为圆角，呼应页面其他标签 */
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    /* 复合阴影：绿紫色柔光，增加突出感 */
+    box-shadow: 
+        0 4px 10px rgba(42, 245, 152, 0.3),
+        0 0 15px rgba(183, 33, 255, 0.2);
+    /* 高级质感：半透明白边 */
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cert-badge-forum:hover {
+    transform: translateY(-3px) scale(1.08);
+    filter: brightness(1.1) saturate(1.1);
+    box-shadow: 
+        0 8px 20px rgba(42, 245, 152, 0.4),
+        0 0 20px rgba(183, 33, 255, 0.4);
+}
+
+/* 流动动画 */
+@keyframes masterFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}

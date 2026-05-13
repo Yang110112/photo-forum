@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { message } from 'antd';
 import { fetchUserInfo } from '../store/authSlice';
+import { getCategories } from '../api/categories';
 import MediaUploader from '../components/MediaUploader';
 import '../css/CreatePost.css';
 
-// 分类数据
-const categories = [
-  { _id: 'landscape', name: '风光摄影', emoji: '🏔️' },
-  { _id: 'portrait', name: '人像摄影', emoji: '👤' },
-  { _id: 'street', name: '街头摄影', emoji: '🏙️' },
-  { _id: 'animal', name: '动物摄影', emoji: '🐾' },
-  { _id: 'food', name: '美食摄影', emoji: '🍽️' },
-  { _id: 'astrophotography', name: '星空摄影', emoji: '🌌' },
-];
+const emojiMap = {
+    landscape: '🏔️',
+    portrait: '👤',
+    street: '🏙️',
+    wildlife: '🐾',
+    food: '🍽️',
+    astrophoto: '🌌',
+    gear: '⚙️',
+    editing: '🖥️',
+};
 
 export default function CreatePost() {
   const [form, setForm] = useState({
@@ -22,6 +25,7 @@ export default function CreatePost() {
     category: '',
     tags: ''
   });
+  const [categories, setCategories] = useState([]);
   const [mediaFiles, setMediaFiles] = useState([]);
   const [openForBooking, setOpenForBooking] = useState(false);
   const [bookingInfo, setBookingInfo] = useState({
@@ -34,100 +38,79 @@ export default function CreatePost() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ✅ 改动：从 Redux store 的 user.certStatus 判断，不再用 localStorage
   const isCertifiedPhotographer = () => {
     return user?.certStatus === 'approved';
   };
 
-  // 如果未登录，跳转到登录页
   useEffect(() => {
     if (!user) {
       navigate('/login');
+      return;
     }
+    getCategories().then(res => {
+      setCategories(res.data.data.categories || []);
+    }).catch(() => {});
   }, [user, navigate]);
 
   const handleFilesChange = (files) => {
     setMediaFiles(files);
   };
 
+  const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+  });
+
   const submit = async () => {
     if (!form.title.trim()) {
-      alert('请输入标题');
+      message.warning('请输入标题');
       return;
     }
     if (!form.category) {
-      alert('请选择分类');
+      message.warning('请选择分类');
       return;
     }
     if (!form.content.trim() || form.content.length < 10) {
-      alert('内容介绍至少需要10个字符');
+      message.warning('内容介绍至少需要10个字符');
       return;
     }
 
     setLoading(true);
 
     try {
-      // ✅ 改动：调用后端 API 创建帖子
+      // 把图片和视频转成 base64
+      const images = await Promise.all(
+        mediaFiles
+          .filter(f => f.type === 'image' || f.type === 'video')
+          .map(f => toBase64(f.file))
+      );
+
       const postData = {
         title: form.title,
         content: form.content,
         category: form.category,
         tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        media: mediaFiles.map(f => ({
-          url: f.previewUrl || URL.createObjectURL(f.file),
-          type: f.type,
-          name: f.name
-        })),
-        // ✅ 约拍相关 — 后端会二次校验 certStatus
+        images,
         openForBooking: isCertifiedPhotographer() ? openForBooking : false,
         bookingLocation: bookingInfo.location,
         bookingDuration: bookingInfo.duration,
         bookingFee: bookingInfo.fee,
       };
 
-      // ✅ 改动：通过 API 发送，不再存 localStorage
       const { default: api } = await import('../api/axios');
-      const res = await api.post('/posts', postData);
+      await api.post('/posts', postData);
 
-      alert('发布成功！');
+      message.success('发布成功！');
       navigate('/forum');
     } catch (err) {
-      // 如果是网络错误，降级到 localStorage
-      if (err.code === 'ERR_NETWORK' || err.code === 'ECONNREFUSED') {
-        const postData = {
-          _id: `local-${Date.now()}`,
-          title: form.title,
-          content: form.content,
-          category: form.category,
-          tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-          media: mediaFiles.map(f => ({
-            url: f.previewUrl || URL.createObjectURL(f.file),
-            type: f.type,
-            name: f.name
-          })),
-          author: { username: user?.username || '匿名用户', avatar: user?.avatar || '' },
-          likeCount: 0,
-          commentCount: 0,
-          viewCount: 0,
-          createdAt: new Date().toISOString(),
-          openForBooking: isCertifiedPhotographer() ? openForBooking : false,
-          bookingInfo: isCertifiedPhotographer() && openForBooking ? bookingInfo : null,
-        };
-        const savedPosts = localStorage.getItem('forumPosts');
-        let posts = savedPosts ? JSON.parse(savedPosts) : [];
-        posts.unshift(postData);
-        localStorage.setItem('forumPosts', JSON.stringify(posts));
-        alert('发布成功（离线模式）！');
-        navigate('/forum');
-      } else {
-        alert(err.response?.data?.message || '发布失败，请重试');
-      }
+      message.error(err.response?.data?.message || '发布失败，请重试');
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ 下面的 JSX 模板完全不变，保留原有 UI
   return (
     <div className="create-post-container">
       <h2 className="create-post-title">📷 发布摄影作品</h2>
@@ -148,7 +131,7 @@ export default function CreatePost() {
               className={`category-option ${form.category === cat._id ? 'selected' : ''}`}
               onClick={() => setForm({ ...form, category: cat._id })}
             >
-              <span className="category-emoji">{cat.emoji}</span>
+              <span className="category-emoji">{emojiMap[cat.slug] || '📷'}</span>
               <span className="category-name">{cat.name}</span>
             </div>
           ))}

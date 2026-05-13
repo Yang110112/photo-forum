@@ -33,7 +33,7 @@ export default function MyPosts() {
 
     const fetchMyPosts = async () => {
         try {
-            const res = await getPosts({ author: user._id, limit: 50 });
+            const res = await getPosts({ author: user.id || user._id, limit: 50 });
             setPosts(res.data.posts || []);
         } catch (err) {
             message.error('加载失败');

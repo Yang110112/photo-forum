@@ -101,7 +101,12 @@ export default function Profile() {
             </label>
           </div>
           <div className="profile-info">
-            <h2 className="profile-username">{user.username}</h2>
+            <h2 className="profile-username">
+                {user.username}
+                {user.certStatus === 'approved' && (
+                    <span className="cert-badge-profile">📸 认证摄影师</span>
+                )}
+            </h2>
             <p className="profile-email">{user.email}</p>
             <p className="profile-bio">{user.bio || '这个人很懒，还没有填写简介'}</p>
             <div className="profile-stats">

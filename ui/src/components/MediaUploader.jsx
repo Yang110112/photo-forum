@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { message } from 'antd';
 import '../css/MediaUploader.css';
 
 export default function MediaUploader({ files, onFilesChange }) {
@@ -41,7 +42,7 @@ export default function MediaUploader({ files, onFilesChange }) {
       const isVideo = videoFormats.includes(file.type);
 
       if (!isImage && !isVideo) {
-        alert(`不支持的文件格式: ${file.name}`);
+        message.warning(`不支持的文件格式: ${file.name}`);
         return null;
       }
 
