@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { message } from 'antd';
 import { fetchUserInfo } from '../store/authSlice';
 import { submitCertification, getMyCertification } from '../api/certification';
 import { uploadFile } from '../api/upload';
@@ -90,7 +91,7 @@ export default function PhotographerCert() {
         setCertPreviewUrls(prev => [...prev, URL.createObjectURL(file)]);
       }
     } catch (err) {
-      alert('证书上传失败，请重试');
+      message.error('证书上传失败，请重试');
     } finally {
       setUploadingCert(false);
     }
@@ -107,18 +108,18 @@ export default function PhotographerCert() {
         setPortfolioPreviewUrls(prev => [...prev, URL.createObjectURL(file)]);
       }
     } catch (err) {
-      alert('作品上传失败，请重试');
+      message.error('作品上传失败，请重试');
     } finally {
       setUploadingPortfolio(false);
     }
   };
 
   const handleSubmit = async () => {
-    if (!form.realName.trim()) { alert('请输入真实姓名'); return; }
-    if (!form.phone.trim()) { alert('请输入联系电话'); return; }
-    if (!form.certType) { alert('请选择认证类型'); return; }
-    if (certFileUrls.length === 0) { alert('请上传至少一张证书照片'); return; }
-    if (portfolioUrls.length === 0) { alert('请上传至少一张代表作品'); return; }
+    if (!form.realName.trim()) { message.warning('请输入真实姓名'); return; }
+    if (!form.phone.trim()) { message.warning('请输入联系电话'); return; }
+    if (!form.certType) { message.warning('请选择认证类型'); return; }
+    if (certFileUrls.length === 0) { message.warning('请上传至少一张证书照片'); return; }
+    if (portfolioUrls.length === 0) { message.warning('请上传至少一张代表作品'); return; }
 
     setSubmitting(true);
     try {
@@ -135,7 +136,7 @@ export default function PhotographerCert() {
       // 刷新用户信息（certStatus 会变成 pending）
       dispatch(fetchUserInfo());
 
-      alert('认证申请已提交，请等待审核！');
+      message.success('认证申请已提交，请等待审核！');
       setCertStatus('pending');
     } catch (err) {
       // 降级到 localStorage
@@ -152,10 +153,10 @@ export default function PhotographerCert() {
           submittedAt: new Date().toISOString(),
         };
         localStorage.setItem('photographerCerts', JSON.stringify(savedCerts));
-        alert('认证申请已提交（离线模式）！');
+        message.success('认证申请已提交（离线模式）！');
         setCertStatus('pending');
       } else {
-        alert(err.response?.data?.message || '提交失败，请重试');
+        message.error(err.response?.data?.message || '提交失败，请重试');
       }
     } finally {
       setSubmitting(false);

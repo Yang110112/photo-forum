@@ -75,6 +75,10 @@
     font-weight: 800;
     color: #1a1a2e;
     margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .profile-email {
@@ -266,4 +270,18 @@
     .profile-section {
         padding: 20px;
     }
+
+    .cert-badge-profile {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    box-shadow: 0 2px 8px rgba(249,115,22,0.35);
+    white-space: nowrap;
+}
 }

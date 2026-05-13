@@ -131,6 +131,9 @@ export default function Forum() {
                                                 className="author-avatar"
                                             />
                                             <span>{post.author?.username || '匿名用户'}</span>
+                                            {post.author?.certStatus === 'approved' && (
+                                                <span className="cert-badge-forum">👑摄影大师</span>
+                                            )}
                                         </div>
                                         <div className="post-stats">
                                             <span>{post.viewCount || 0} 浏览</span>

@@ -127,7 +127,7 @@ postSchema.statics.getPosts = async function(options = {}) {
                { createdAt: sortOrder };
 
   const posts = await this.find(query)
-    .populate('author', 'username avatar')
+    .populate('author', 'username avatar certStatus')
     .populate('category', 'name slug')
     .select('-isDeleted')
     .sort(sort)
@@ -150,7 +150,7 @@ postSchema.statics.getPosts = async function(options = {}) {
 // 静态方法：获取热门帖子
 postSchema.statics.getHotPosts = function(limit = 10) {
   return this.find({ status: 'published', isDeleted: false })
-    .populate('author', 'username avatar')
+    .populate('author', 'username avatar certStatus')
     .populate('category', 'name slug')
     .select('-isDeleted')
     .sort({ likeCount: -1, viewCount: -1 })

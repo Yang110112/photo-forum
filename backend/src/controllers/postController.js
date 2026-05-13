@@ -13,7 +13,7 @@ const { AppError } = require('../middleware/errorHandler');
  */
 exports.createPost = async (req, res, next) => {
   try {
-    const { title, content, category, tags, images } = req.body;
+    const { title, content, category, tags, images, openForBooking, bookingLocation, bookingDuration, bookingFee } = req.body;
 
     // 验证分类（支持 ObjectId 和 slug）
     let categoryDoc;
@@ -31,17 +31,17 @@ exports.createPost = async (req, res, next) => {
 
     // 创建帖子
     const post = await Post.create({
-      title,
-      content,
-      category: categoryDoc._id,
-      tags: tags || [],
-      author: req.user._id,
-      images: images || [],
-      openForBooking: canOpenBooking,
-      bookingLocation: canOpenBooking ? (bookingLocation || '') : '',
-      bookingDuration: canOpenBooking ? (bookingDuration || '') : '',
-      bookingFee: canOpenBooking ? (bookingFee || '') : '',
-    });
+    title,
+    content,
+    category: categoryDoc._id,
+    tags: tags || [],
+    images: images || [],
+    author: req.user._id,
+    openForBooking: openForBooking || false,
+    bookingLocation: bookingLocation || '',
+    bookingDuration: bookingDuration || '',
+    bookingFee: bookingFee || '',
+  });
 
     // 更新分类帖子数
     await Category.updatePostCount(categoryDoc._id, 1);

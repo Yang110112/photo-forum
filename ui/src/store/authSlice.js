@@ -2,27 +2,40 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { login, register, getMe } from '../api/auth';
 
 // 登录
-export const loginUser = createAsyncThunk('auth/login', async (data, { rejectWithValue }) => {
-  try {
-    const res = await login(data);
-    localStorage.setItem('token', res.data.data.token);
-    return res.data.data;
-  } catch (err) {
-    return rejectWithValue(err.response?.data || { message: '登录失败' });
+export const loginUser = createAsyncThunk(
+  'auth/login',
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await login(data);
+      const { user, token } = res.data.data;
+      localStorage.setItem('token', token);
+      return { user, token };
+    } catch (err) {
+      return rejectWithValue(err.response?.data || { message: '登录失败' });
+    }
   }
-});
+);
 
 // 注册
-export const registerUser = createAsyncThunk('auth/register', async (data) => {
-  const res = await register(data);
-  localStorage.setItem('token', res.data.data.token);
-  return res.data.data;
-});
+export const registerUser = createAsyncThunk(
+  'auth/register',
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await register(data);
+      const { user, token } = res.data.data;
+      localStorage.setItem('token', token);
+      return { user, token };
+    } catch (err) {
+      return rejectWithValue(err.response?.data || { message: '注册失败' });
+    }
+  }
+);
 
 // 获取用户信息
 export const fetchUserInfo = createAsyncThunk('auth/getMe', async () => {
   const res = await getMe();
-  return res.data;
+  // 兼容不同后端返回格式
+  return res.data.data?.user || res.data.user || null;
 });
 
 const authSlice = createSlice({
@@ -47,21 +60,35 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-        .addCase(loginUser.fulfilled, (state, action) => {
-          state.user = action.payload.user;
-          state.token = action.payload.token;
-        })
-        .addCase(registerUser.fulfilled, (state, action) => {
-          state.user = action.payload.user;
-          state.token = action.payload.token;
-        })
-        .addCase(fetchUserInfo.fulfilled, (state, action) => {
-          // 兼容后端返回格式：res.data.data.user 或 res.data.user
-          const userData = action.payload.data?.user || action.payload.user;
-          if (userData) {
-            state.user = userData;
-          }
-        });
+      // 登录
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      // 注册
+      .addCase(registerUser.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      // 获取用户信息
+      .addCase(fetchUserInfo.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.user = action.payload;
+        }
+      })
+      // 可以加 pending/ rejected 处理 loading/error
+      .addMatcher(
+        (action) => action.type.startsWith('auth/') && action.type.endsWith('/pending'),
+        (state) => { state.loading = true; }
+      )
+      .addMatcher(
+        (action) => action.type.startsWith('auth/') && action.type.endsWith('/fulfilled'),
+        (state) => { state.loading = false; }
+      )
+      .addMatcher(
+        (action) => action.type.startsWith('auth/') && action.type.endsWith('/rejected'),
+        (state) => { state.loading = false; }
+      );
   },
 });
 

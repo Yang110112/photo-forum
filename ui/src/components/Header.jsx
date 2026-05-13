@@ -106,6 +106,8 @@ export default function Header() {
                                     <div className="user-dropdown">
                                         <Link to="/profile" className="user-dropdown-item">个人中心</Link>
                                         <Link to="/my-posts" className="user-dropdown-item">我的作品</Link>
+                                        <Link to="/certification" className="user-dropdown-item">摄影师认证</Link>
+                                        <Link to="/bookings" className="user-dropdown-item">我的约拍</Link>
                                         <div className="user-dropdown-divider" />
                                         <button className="user-dropdown-item user-dropdown-logout" onClick={handleLogout}>退出登录</button>
                                     </div>
