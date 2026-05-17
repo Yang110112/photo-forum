@@ -11,7 +11,8 @@
 
 /* ===== 侧边栏 ===== */
 .messages-sidebar {
-    width: 320px;
+    width: 340px;
+    min-width: 340px;
     border-right: 1px solid #e5e7eb;
     display: flex;
     flex-direction: column;
@@ -54,6 +55,7 @@
     display: flex;
     border-bottom: 1px solid #e5e7eb;
     background: white;
+    position: relative;
 }
 
 .tab-btn {
@@ -66,6 +68,7 @@
     cursor: pointer;
     transition: all 0.2s;
     border-bottom: 2px solid transparent;
+    position: relative;
 }
 
 .tab-btn:hover {
@@ -78,12 +81,56 @@
     font-weight: 600;
 }
 
+/* 好友请求徽章 */
+.pending-badge {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 10px;
+    padding: 0 5px;
+}
+
+/* 未读消息徽章 */
+.unread-badge {
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 10px;
+    padding: 0 6px;
+}
+
 /* 聊天列表 */
 .chat-list,
 .friends-list,
 .discover-list {
     flex: 1;
     overflow-y: auto;
+}
+
+.friends-list::-webkit-scrollbar,
+.chat-list::-webkit-scrollbar,
+.discover-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.friends-list::-webkit-scrollbar-thumb,
+.chat-list::-webkit-scrollbar-thumb,
+.discover-list::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
 }
 
 .empty-state {
@@ -99,6 +146,79 @@
 
 .empty-state small {
     font-size: 0.85rem;
+}
+
+/* ===== 好友请求区域 ===== */
+.friend-requests-section {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.requests-header {
+    padding: 12px 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: #f9fafb;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.friend-request-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #fffbeb;
+    border-bottom: 1px solid #fef3c7;
+    transition: background 0.2s;
+}
+
+.friend-request-item:hover {
+    background: #fef3c7;
+}
+
+.accept-btn {
+    padding: 5px 12px;
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.accept-btn:hover {
+    opacity: 0.9;
+}
+
+.reject-btn {
+    padding: 5px 12px;
+    background: #9ca3af;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.reject-btn:hover {
+    opacity: 0.9;
+}
+
+.accept-btn-small {
+    padding: 4px 10px;
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
 /* 聊天项 */
@@ -149,6 +269,7 @@
 .chat-time {
     font-size: 0.75rem;
     color: #9ca3af;
+    white-space: nowrap;
 }
 
 .chat-preview {
@@ -188,7 +309,9 @@
 }
 
 .friend-name {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-weight: 600;
     color: #1a1a2e;
     margin-bottom: 4px;
@@ -198,11 +321,15 @@
     display: block;
     font-size: 0.8rem;
     color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .friend-actions {
     display: flex;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .chat-btn,
@@ -214,6 +341,9 @@
     cursor: pointer;
     font-size: 1rem;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .chat-btn {
@@ -234,7 +364,24 @@
     background: #fecaca;
 }
 
-/* 发现列表 */
+/* ===== 系统标签 ===== */
+.system-tag {
+    display: inline-block;
+    padding: 1px 8px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    border-radius: 10px;
+    vertical-align: middle;
+}
+
+/* ===== 发现列表 ===== */
+.discover-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
 .search-box {
     padding: 16px 20px;
     border-bottom: 1px solid #e5e7eb;
@@ -246,6 +393,7 @@
     border: 2px solid #e5e7eb;
     border-radius: 8px;
     font-size: 0.9rem;
+    transition: border-color 0.2s;
 }
 
 .search-box input:focus {
@@ -275,6 +423,7 @@
 
 .user-info {
     flex: 1;
+    min-width: 0;
 }
 
 .user-name {
@@ -288,27 +437,71 @@
     display: block;
     font-size: 0.8rem;
     color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.add-btn {
-    width: 36px;
-    height: 36px;
+.discover-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* 关注按钮 */
+.follow-btn {
+    padding: 5px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.follow-btn:not(.following) {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: white;
+}
+
+.follow-btn:not(.following):hover {
+    transform: translateY(-1px);
+}
+
+.follow-btn.following {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+.follow-btn.following:hover {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+/* 小型添加好友按钮 */
+.add-btn-small {
+    padding: 5px 12px;
     background: linear-gradient(135deg, #f97316, #ea580c);
     color: white;
     border: none;
-    border-radius: 50%;
-    font-size: 1.2rem;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
     transition: transform 0.2s;
 }
 
-.add-btn:hover {
-    transform: scale(1.1);
+.add-btn-small:hover {
+    transform: translateY(-1px);
 }
 
 .already-friend {
     font-size: 0.8rem;
     color: #9ca3af;
+    padding: 5px 8px;
+    white-space: nowrap;
 }
 
 /* ===== 聊天区域 ===== */
@@ -341,6 +534,9 @@
     font-weight: 600;
     color: #1a1a2e;
     margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .online-status {
@@ -355,6 +551,15 @@
     padding: 20px 24px;
 }
 
+.messages-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-list::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
 .no-messages {
     text-align: center;
     padding: 40px;
@@ -364,6 +569,12 @@
 .message {
     display: flex;
     margin-bottom: 16px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .message.own {
@@ -385,7 +596,8 @@
 
 .message-bubble p {
     margin: 0 0 6px;
-    line-height: 1.5;
+    line-height: 1.6;
+    word-break: break-word;
 }
 
 .message-time {
@@ -408,6 +620,7 @@
     border: 2px solid #e5e7eb;
     border-radius: 24px;
     font-size: 0.95rem;
+    transition: border-color 0.2s;
 }
 
 .message-input-area input:focus {
@@ -424,6 +637,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.2s;
+    white-space: nowrap;
 }
 
 .message-input-area button:hover:not(:disabled) {
@@ -456,7 +670,7 @@
     margin-bottom: 8px;
 }
 
-/* 弹窗 */
+/* ===== 弹窗 ===== */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -468,6 +682,7 @@
     align-items: center;
     justify-content: center;
     z-index: 100;
+    animation: fadeIn 0.2s ease;
 }
 
 .modal-content {
@@ -475,7 +690,7 @@
     border-radius: 16px;
     padding: 24px;
     width: 90%;
-    max-width: 400px;
+    max-width: 420px;
     max-height: 80vh;
     overflow-y: auto;
 }
@@ -494,6 +709,7 @@
     border-radius: 8px;
     font-size: 0.95rem;
     margin-bottom: 16px;
+    box-sizing: border-box;
 }
 
 .modal-content input:focus {
@@ -520,9 +736,23 @@
     border-radius: 50%;
 }
 
-.modal-user-item span {
+.modal-user-info {
     flex: 1;
+    min-width: 0;
+}
+
+.modal-user-info span {
+    display: block;
     font-weight: 500;
+}
+
+.modal-user-info small {
+    display: block;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .modal-user-item button {
@@ -533,11 +763,13 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 .already-added {
     font-size: 0.8rem;
     color: #9ca3af;
+    white-space: nowrap;
 }
 
 .modal-close-btn {
@@ -551,13 +783,14 @@
     font-size: 0.95rem;
     font-weight: 500;
     color: #6b7280;
+    transition: background 0.2s;
 }
 
 .modal-close-btn:hover {
     background: #e5e7eb;
 }
 
-/* 响应式 */
+/* ===== 响应式 ===== */
 @media (max-width: 768px) {
     .messages-container {
         flex-direction: column;
@@ -567,6 +800,7 @@
 
     .messages-sidebar {
         width: 100%;
+        min-width: unset;
         max-height: 50vh;
     }
 
@@ -576,5 +810,10 @@
 
     .message-bubble {
         max-width: 85%;
+    }
+
+    .discover-actions {
+        flex-direction: column;
+        gap: 4px;
     }
 }

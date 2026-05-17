@@ -5,6 +5,7 @@ import { getCommentsByPost, createComment } from '../api/comments';
 import { message } from 'antd';
 import { getPostById, likePost, unlikePost } from '../api/posts';
 import { createBooking } from '../api/bookings';
+import { followUser, unfollowUser, getFollowStats } from '../api/follows';
 import '../css/PostDetail.css';
 
 // 分类数据
@@ -29,6 +30,7 @@ export default function PostDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   // 约拍弹窗状态
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -50,6 +52,15 @@ export default function PostDetail() {
         setComments(commentRes.data.comments || []);
         setLikeCount(postRes.data.data.post?.likeCount || 0);
         setLiked(postRes.data.data.post?.isLiked || false);
+
+        // 加载关注状态
+        const authorId = postRes.data.data.post?.author?._id;
+        if (authorId && user?._id && authorId !== user._id) {
+          try {
+            const followRes = await getFollowStats(authorId);
+            setIsFollowing(followRes.data.data.isFollowing || false);
+          } catch (e) { /* ignore */ }
+        }
       } catch (error) {
         message.error('加载失败');
       } finally {
@@ -98,6 +109,25 @@ export default function PostDetail() {
         }
     } catch (err) {
         message.error(err.response?.data?.message || '操作失败');
+    }
+  };
+
+  const handleToggleFollow = async () => {
+    if (!user) { message.warning('请先登录'); navigate('/login'); return; }
+    const authorId = post?.author?._id;
+    if (!authorId) return;
+    try {
+      if (isFollowing) {
+        await unfollowUser(authorId);
+        setIsFollowing(false);
+        message.success('已取消关注');
+      } else {
+        await followUser(authorId);
+        setIsFollowing(true);
+        message.success('关注成功');
+      }
+    } catch (err) {
+      message.error(err.response?.data?.message || '操作失败');
     }
   };
 
@@ -157,6 +187,9 @@ export default function PostDetail() {
     }
     return { name: slug, emoji: '📷' };
   };
+
+  // 判断是否可以关注（不是自己的帖子）
+  const canFollow = user && post?.author?._id && post?.author?._id !== user?._id;
 
   // 判断是否可以约拍（不是自己的帖子 + 帖子开启了约拍）
   const canBook = user && post?.openForBooking && post?.author?._id !== user?._id && post?.author !== user?._id;
@@ -236,6 +269,14 @@ export default function PostDetail() {
             </span>
             <span className="pd-date">{formatTime(post.createdAt)}</span>
           </div>
+          {canFollow && (
+            <button
+              className={`pd-follow-btn ${isFollowing ? 'following' : ''}`}
+              onClick={handleToggleFollow}
+            >
+              {isFollowing ? '已关注' : '+ 关注'}
+            </button>
+          )}
         </div>
 
         <div

@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { getMe, updateMe, updatePassword, uploadAvatar } from '../api/users';
-import { useNavigate } from 'react-router-dom';
+import { getFollowStats } from '../api/follows';
+import { getFriends } from '../api/friends';
+import { useNavigate, Link } from 'react-router-dom';
 import '../css/Profile.css';
 
 export default function Profile() {
@@ -16,13 +18,29 @@ export default function Profile() {
   const [editing, setEditing] = useState(false);
   const [msg, setMsg] = useState('');
   const [previewAvatar, setPreviewAvatar] = useState(null);
+  const [followStats, setFollowStats] = useState({ followingCount: 0, followersCount: 0 });
+  const [friendCount, setFriendCount] = useState(0);
 
   useEffect(() => {
-    getMe().then(res => {
-      const u = res.data.data.user;
-      setUser(u);
-      setEditForm({ username: u.username, bio: u.bio || '' });
-    });
+    const loadProfile = async () => {
+      try {
+        const res = await getMe();
+        const u = res.data.data.user;
+        setUser(u);
+        setEditForm({ username: u.username, bio: u.bio || '' });
+
+        // 加载关注统计
+        const statsRes = await getFollowStats(u._id);
+        setFollowStats(statsRes.data.data);
+
+        // 加载好友数量
+        const friendsRes = await getFriends();
+        setFriendCount(friendsRes.data.data.friends?.length || 0);
+      } catch (err) {
+        console.error('加载资料失败', err);
+      }
+    };
+    loadProfile();
   }, []);
 
   const handleSaveProfile = async () => {
@@ -113,6 +131,20 @@ export default function Profile() {
               <div className="stat-item-profile">
                 <strong>{user.postCount ?? 0}</strong>
                 <span>帖子</span>
+              </div>
+              <div className="stat-item-profile">
+                <strong>{followStats.followingCount}</strong>
+                <span>关注</span>
+              </div>
+              <div className="stat-item-profile">
+                <strong>{followStats.followersCount}</strong>
+                <span>粉丝</span>
+              </div>
+              <div className="stat-item-profile">
+                <Link to="/messages" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <strong>{friendCount}</strong>
+                  <span>好友</span>
+                </Link>
               </div>
             </div>
           </div>
