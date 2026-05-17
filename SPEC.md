@@ -1,16 +1,3 @@
----
-AIGC:
-    ContentProducer: Minimax Agent AI
-    ContentPropagator: Minimax Agent AI
-    Label: AIGC
-    ProduceID: "00000000000000000000000000000000"
-    PropagateID: "00000000000000000000000000000000"
-    ReservedCode1: 304402201aefc45cda731be6eedc00ed4aaefb44db787b54f0f56bae70b49ce1838e2a86022057cd61ebadf86a99d6e75235e046da72943602d1d9d3271739166970cead3b4f
-    ReservedCode2: 3046022100cf6127b486b215edf0fa9827ea6d12d9cdaba85beba6a11649a8b3c983d9358b022100de040d084b1ab106502127036a4385e88faef259533c514c4ed617e9ba822feb
----
-
-
-
 # 前后端分离论坛系统 - 项目规范文档
 
 ## 一、项目概述

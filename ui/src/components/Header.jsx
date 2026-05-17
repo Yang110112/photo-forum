@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
+import { getUnreadCount } from '../api/messages';
+import { getPendingRequests } from '../api/friends';
 import '../css/Header.css';
 
 // 分类数据
@@ -22,6 +24,30 @@ export default function Header() {
     const [showCategories, setShowCategories] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [unreadMsgCount, setUnreadMsgCount] = useState(0);
+    const [pendingFriendCount, setPendingFriendCount] = useState(0);
+
+    // 定时轮询未读消息和好友请求
+    useEffect(() => {
+        if (!user) return;
+        const fetchCounts = async () => {
+            try {
+                const [msgRes, friendRes] = await Promise.all([
+                    getUnreadCount().catch(() => ({ data: { data: { totalUnread: 0 } } })),
+                    getPendingRequests().catch(() => ({ data: { data: { requests: [] } } }))
+                ]);
+                setUnreadMsgCount(msgRes.data.data.totalUnread || 0);
+                setPendingFriendCount(friendRes.data.data.requests?.length || 0);
+            } catch (err) {
+                // 静默处理
+            }
+        };
+        fetchCounts();
+        const interval = setInterval(fetchCounts, 30000);
+        return () => clearInterval(interval);
+    }, [user]);
+
+    const totalNotifications = unreadMsgCount + pendingFriendCount;
 
     const handleLogout = () => {
         dispatch(logout());
@@ -89,6 +115,10 @@ export default function Header() {
                 <div className="nav-actions">
                     {user && (
                         <>
+                            <Link to="/messages" className={`nav-link msg-link ${location.pathname === '/messages' ? 'active' : ''}`}>
+                                消息
+                                {totalNotifications > 0 && <span className="header-notif-badge">{totalNotifications}</span>}
+                            </Link>
                             <Link to="/create" className="nav-link create-btn">发布作品</Link>
                             <div className="nav-avatar-wrap"
                                 onMouseEnter={() => setShowUserMenu(true)}
@@ -141,6 +171,9 @@ export default function Header() {
                         <>
                             <div className="mobile-menu-divider"></div>
                             <Link to="/create" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>发布作品</Link>
+                            <Link to="/messages" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>
+                                消息 {totalNotifications > 0 && `(${totalNotifications})`}
+                            </Link>
                             <Link to="/profile" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>个人中心</Link>
                         </>
                     )}
