@@ -520,6 +520,41 @@
   color: #d97706;
 }
 
+/* 关注按钮 */
+.pd-follow-btn {
+  margin-left: auto;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.pd-follow-btn:not(.following) {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+}
+
+.pd-follow-btn:not(.following):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+.pd-follow-btn.following {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.pd-follow-btn.following:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
   .pd-container {

@@ -360,6 +360,33 @@
     color: white;
 }
 
+/* 消息链接与通知徽章 */
+.msg-link {
+    position: relative;
+}
+
+.header-notif-badge {
+    position: absolute;
+    top: -8px;
+    right: -12px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 8px;
+    padding: 0 4px;
+    animation: badgePulse 2s ease infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
 @media (max-width: 768px) {
     .header-container {
         padding: 12px 16px;

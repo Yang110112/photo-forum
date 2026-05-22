@@ -17,6 +17,8 @@ require('dotenv').config();
 const User = require('../src/models/User');
 const Category = require('../src/models/Category');
 const Post = require('../src/models/Post');
+const Friendship = require('../src/models/Friendship');
+const PrivateMessage = require('../src/models/PrivateMessage');
 
 /**
  * 种子数据配置
@@ -24,6 +26,14 @@ const Post = require('../src/models/Post');
 const SEED_CONFIG = {
   // 测试用户数据
   users: [
+    {
+      username: 'system_official',
+      email: 'system@forum.com',
+      password: 'system123456',
+      role: 'admin',
+      bio: '摄影论坛官方助手，为您提供系统更新和维护通知服务。',
+      avatar: '',
+    },
     {
       username: 'admin',
       email: 'admin@example.com',
@@ -207,6 +217,8 @@ async function clearData() {
   await User.deleteMany({});
   await Category.deleteMany({});
   await Post.deleteMany({});
+  await Friendship.deleteMany({});
+  await PrivateMessage.deleteMany({});
   console.log('数据清除完成');
 }
 
@@ -227,6 +239,43 @@ async function createUsers() {
 
   console.log(`共创建 ${users.length} 个用户`);
   return users;
+}
+
+/**
+ * 为用户自动添加官方好友并发送欢迎消息
+ */
+async function addOfficialFriendToUsers(users) {
+  console.log('正在为用户添加官方好友...');
+  const systemUser = users.find(u => u.username === 'system_official');
+  if (!systemUser) {
+    console.log('  未找到官方用户，跳过');
+    return;
+  }
+
+  for (const user of users) {
+    if (user.username === 'system_official') continue;
+
+    // 创建好友关系
+    await Friendship.create({
+      fromUser: systemUser._id,
+      toUser: user._id,
+      status: 'accepted',
+      isSystem: true,
+      message: '欢迎加入摄影论坛！我是系统官方助手，会为您推送系统更新和维护通知。'
+    });
+
+    // 发送欢迎消息
+    const PrivateMessage = require('../src/models/PrivateMessage');
+    const conversationId = PrivateMessage.generateConversationId(systemUser._id, user._id);
+    await PrivateMessage.create({
+      conversationId,
+      sender: systemUser._id,
+      receiver: user._id,
+      content: `你好 ${user.username}，欢迎加入摄影论坛！\n\n我是系统官方助手，以后如果有系统更新、维护通知或重要公告，我会通过私聊通知你。\n\n如有任何问题，也可以随时给我发消息。祝你在这里玩得开心！`
+    });
+
+    console.log(`  ✓ 已为 ${user.username} 添加官方好友并发送欢迎消息`);
+  }
 }
 
 /**
@@ -309,6 +358,7 @@ async function seed() {
     // 执行种子操作
     await clearData();
     const users = await createUsers();
+    await addOfficialFriendToUsers(users);
     const categories = await createCategories();
     await createPosts(users, categories);
     await updateCategoryCounts();

@@ -23,6 +23,9 @@ const categoryRoutes = require('./routes/categories');
 const favoriteRoutes = require('./routes/favorites');
 const certificationRouter = require('./routes/certification');
 const bookingRouter = require('./routes/bookings');
+const friendRoutes = require('./routes/friends');
+const followRoutes = require('./routes/follows');
+const messageRoutes = require('./routes/messages');
 
 // 导入中间件
 const { errorHandler } = require('./middleware/errorHandler');
@@ -60,6 +63,9 @@ app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/favorites', favoriteRoutes);
 app.use('/api/v1/certification', certificationRouter);
 app.use('/api/v1/bookings', bookingRouter);
+app.use('/api/v1/friends', friendRoutes);
+app.use('/api/v1/follows', followRoutes);
+app.use('/api/v1/messages', messageRoutes);
 
 // 健康检查
 app.get('/api/v1/health', (req, res) => {

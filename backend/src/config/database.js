@@ -42,6 +42,9 @@ const initIndexes = async () => {
     const Category = require('../models/Category');
     const Like = require('../models/Like');
     const Favorite = require('../models/Favorite');
+    const Friendship = require('../models/Friendship');
+    const Follow = require('../models/Follow');
+    const PrivateMessage = require('../models/PrivateMessage');
 
     await Promise.all([
       User.createIndexes(),
@@ -49,7 +52,10 @@ const initIndexes = async () => {
       Comment.createIndexes(),
       Category.createIndexes(),
       Like.createIndexes(),
-      Favorite.createIndexes()
+      Favorite.createIndexes(),
+      Friendship.createIndexes(),
+      Follow.createIndexes(),
+      PrivateMessage.createIndexes()
     ]);
 
     console.log('✅ Database indexes created');
