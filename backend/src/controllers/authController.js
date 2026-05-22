@@ -4,6 +4,7 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Friendship = require('../models/Friendship');
 const { AppError } = require('../middleware/errorHandler');
 
 // 生成JWT Token
@@ -40,6 +41,22 @@ exports.register = async (req, res, next) => {
       email,
       password
     });
+
+    // 自动添加官方系统好友
+    try {
+      const systemUser = await User.findOne({ role: 'admin', username: 'system_official' });
+      if (systemUser) {
+        await Friendship.create({
+          fromUser: systemUser._id,
+          toUser: user._id,
+          status: 'accepted',
+          isSystem: true,
+          message: '欢迎加入摄影论坛！我是系统官方助手，会为您推送系统更新和维护通知。'
+        });
+      }
+    } catch (friendErr) {
+      console.error('自动添加官方好友失败:', friendErr.message);
+    }
 
     // 生成Token
     const token = generateToken(user._id);
