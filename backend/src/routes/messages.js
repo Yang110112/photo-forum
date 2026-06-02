@@ -43,6 +43,28 @@ router.get('/conversations', messageController.getConversations);
 router.get('/unread', messageController.getUnreadCount);
 
 /**
+ * @route   POST /api/v1/messages/broadcast
+ * @desc    系统官方一键广播通知所有用户
+ * @access  Private (仅系统官方账号)
+ */
+router.post(
+  '/broadcast',
+  [
+    body('content').trim().notEmpty().withMessage('通知内容不能为空').isLength({ max: 5000 }).withMessage('通知内容不能超过5000个字符'),
+    body('title').optional().trim().isLength({ max: 100 }).withMessage('标题不能超过100个字符')
+  ],
+  validate,
+  messageController.broadcastMessage
+);
+
+/**
+ * @route   GET /api/v1/messages/broadcast/history
+ * @desc    获取广播历史记录（仅系统官方）
+ * @access  Private (仅系统官方账号)
+ */
+router.get('/broadcast/history', messageController.getBroadcastHistory);
+
+/**
  * @route   GET /api/v1/messages/:friendId
  * @desc    获取与某好友的会话消息
  * @access  Private

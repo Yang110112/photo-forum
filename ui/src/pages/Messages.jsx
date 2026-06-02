@@ -11,7 +11,8 @@ import {
   followUser, unfollowUser, getFollowStats
 } from '../api/follows';
 import {
-  getConversations, getConversation, sendMessage as sendMsg
+  getConversations, getConversation, sendMessage as sendMsg,
+  broadcastMessage, getBroadcastHistory
 } from '../api/messages';
 import '../css/Messages.css';
 
@@ -32,6 +33,13 @@ export default function Messages() {
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sendingMsg, setSendingMsg] = useState(false);
+
+  // 广播通知状态（仅系统官方账号）
+  const [showBroadcast, setShowBroadcast] = useState(false);
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastContent, setBroadcastContent] = useState('');
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [broadcastHistory, setBroadcastHistory] = useState([]);
 
   const messagesEndRef = useRef(null);
   const searchTimerRef = useRef(null);
@@ -264,6 +272,55 @@ export default function Messages() {
     return map[status] || status;
   };
 
+  // 判断当前用户是否为系统官方
+  const isSystemAccount = user?.isSystem || false;
+
+  // 发送广播通知
+  const handleBroadcast = async () => {
+    if (!broadcastContent.trim()) {
+      antMessage.warning('请输入通知内容');
+      return;
+    }
+    if (!window.confirm(`确定要向所有用户发送广播通知吗？\n\n标题：${broadcastTitle || '系统通知'}\n内容：${broadcastContent.trim().slice(0, 50)}...`)) {
+      return;
+    }
+    setBroadcasting(true);
+    try {
+      const res = await broadcastMessage({
+        title: broadcastTitle.trim() || undefined,
+        content: broadcastContent.trim()
+      });
+      antMessage.success(res.data.message || `通知已发送给 ${res.data.data.recipientCount} 位用户`);
+      setBroadcastTitle('');
+      setBroadcastContent('');
+      setShowBroadcast(false);
+      loadBroadcastHistory();
+      loadConversations(); // 刷新会话列表
+    } catch (err) {
+      antMessage.error(err.response?.data?.message || '广播发送失败');
+    } finally {
+      setBroadcasting(false);
+    }
+  };
+
+  // 加载广播历史
+  const loadBroadcastHistory = useCallback(async () => {
+    if (!isSystemAccount) return;
+    try {
+      const res = await getBroadcastHistory();
+      setBroadcastHistory(res.data.data.broadcasts || []);
+    } catch (err) {
+      console.error('加载广播历史失败', err);
+    }
+  }, [isSystemAccount]);
+
+  // 初始化加载广播历史
+  useEffect(() => {
+    if (isSystemAccount) {
+      loadBroadcastHistory();
+    }
+  }, [isSystemAccount, loadBroadcastHistory]);
+
   // 好友请求徽章数
   const pendingCount = pendingRequests.length;
 
@@ -273,9 +330,16 @@ export default function Messages() {
       <div className="messages-sidebar">
         <div className="sidebar-header">
           <h2>消息</h2>
-          <button className="add-friend-btn" onClick={() => setShowAddFriend(true)}>
-            + 添加好友
-          </button>
+          <div className="sidebar-header-actions">
+            {isSystemAccount && (
+              <button className="broadcast-btn" onClick={() => setShowBroadcast(true)}>
+                📢 广播通知
+              </button>
+            )}
+            <button className="add-friend-btn" onClick={() => setShowAddFriend(true)}>
+              + 添加好友
+            </button>
+          </div>
         </div>
 
         {/* 标签切换 */}
@@ -530,6 +594,65 @@ export default function Messages() {
           </div>
         )}
       </div>
+
+      {/* 广播通知弹窗（仅系统官方） */}
+      {showBroadcast && (
+        <div className="modal-overlay" onClick={() => setShowBroadcast(false)}>
+          <div className="modal-content broadcast-modal" onClick={e => e.stopPropagation()}>
+            <div className="broadcast-modal-header">
+              <h3>📢 一键广播通知</h3>
+              <small>通知将发送给所有用户的私信中</small>
+            </div>
+            <div className="broadcast-form">
+              <label>通知标题（可选）</label>
+              <input
+                type="text"
+                placeholder="如：系统维护通知、新功能上线..."
+                value={broadcastTitle}
+                onChange={(e) => setBroadcastTitle(e.target.value)}
+                maxLength={100}
+              />
+              <label>通知内容 *</label>
+              <textarea
+                placeholder="输入要广播给所有用户的通知内容..."
+                value={broadcastContent}
+                onChange={(e) => setBroadcastContent(e.target.value)}
+                maxLength={5000}
+                rows={6}
+              />
+              <div className="broadcast-char-count">{broadcastContent.length}/5000</div>
+              <div className="broadcast-actions">
+                <button className="modal-close-btn" onClick={() => setShowBroadcast(false)}>取消</button>
+                <button
+                  className="broadcast-send-btn"
+                  onClick={handleBroadcast}
+                  disabled={!broadcastContent.trim() || broadcasting}
+                >
+                  {broadcasting ? '发送中...' : '📢 发送给所有用户'}
+                </button>
+              </div>
+            </div>
+
+            {/* 广播历史 */}
+            {broadcastHistory.length > 0 && (
+              <div className="broadcast-history">
+                <div className="broadcast-history-header">历史广播</div>
+                {broadcastHistory.map(item => (
+                  <div key={item._id} className="broadcast-history-item">
+                    <div className="broadcast-history-content">
+                      <p>{item.content}</p>
+                    </div>
+                    <div className="broadcast-history-meta">
+                      <span>送达 {item.recipientCount} 人</span>
+                      <span>{formatTime(item.createdAt)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 添加好友弹窗 */}
       {showAddFriend && (

@@ -11,3 +11,9 @@ export const getConversations = () => api.get('/messages/conversations');
 
 // 获取未读消息数
 export const getUnreadCount = () => api.get('/messages/unread');
+
+// 系统官方一键广播通知所有用户
+export const broadcastMessage = (data) => api.post('/messages/broadcast', data);
+
+// 获取广播历史记录
+export const getBroadcastHistory = (params) => api.get('/messages/broadcast/history', { params });
