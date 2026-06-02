@@ -34,6 +34,29 @@
     color: #1a1a2e;
 }
 
+.sidebar-header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.broadcast-btn {
+    padding: 8px 14px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+    white-space: nowrap;
+}
+
+.broadcast-btn:hover {
+    transform: translateY(-2px);
+}
+
 .add-friend-btn {
     padding: 8px 16px;
     background: linear-gradient(135deg, #f97316, #ea580c);
@@ -788,6 +811,150 @@
 
 .modal-close-btn:hover {
     background: #e5e7eb;
+}
+
+/* ===== 广播通知弹窗 ===== */
+.broadcast-modal {
+    max-width: 560px !important;
+}
+
+.broadcast-modal-header {
+    margin-bottom: 20px;
+}
+
+.broadcast-modal-header small {
+    display: block;
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+.broadcast-form label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    margin-top: 14px;
+}
+
+.broadcast-form label:first-child {
+    margin-top: 0;
+}
+
+.broadcast-form input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    margin-bottom: 0 !important;
+}
+
+.broadcast-form input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.broadcast-form textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+    line-height: 1.6;
+}
+
+.broadcast-form textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.broadcast-char-count {
+    text-align: right;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+.broadcast-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.broadcast-actions .modal-close-btn {
+    flex: 1;
+    margin-top: 0;
+}
+
+.broadcast-send-btn {
+    flex: 2;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.broadcast-send-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.broadcast-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 广播历史 */
+.broadcast-history {
+    margin-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+}
+
+.broadcast-history-header {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12px;
+}
+
+.broadcast-history-item {
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #f3f4f6;
+}
+
+.broadcast-history-content p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #374151;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 80px;
+    overflow: hidden;
+}
+
+.broadcast-history-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: #9ca3af;
 }
 
 /* ===== 响应式 ===== */

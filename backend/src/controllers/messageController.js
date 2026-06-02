@@ -4,6 +4,7 @@
 
 const PrivateMessage = require('../models/PrivateMessage');
 const Friendship = require('../models/Friendship');
+const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
 
 /**
@@ -196,6 +197,140 @@ exports.getUnreadCount = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    系统官方一键广播通知所有用户
+ * @access  仅系统官方账号（isSystem=true）
+ */
+exports.broadcastMessage = async (req, res, next) => {
+  try {
+    const senderId = req.user._id;
+    const { content, title } = req.body;
+
+    if (!content || !content.trim()) {
+      return next(new AppError('通知内容不能为空', 400));
+    }
+
+    if (content.trim().length > 5000) {
+      return next(new AppError('通知内容不能超过5000个字符', 400));
+    }
+
+    // 验证当前用户是否为系统官方账号
+    const sender = await User.findById(senderId);
+    if (!sender) {
+      return next(new AppError('用户不存在', 404));
+    }
+    if (!sender.isSystem) {
+      return next(new AppError('只有系统官方账号才能发送广播通知', 403));
+    }
+
+    // 获取所有非系统、未删除的活跃用户
+    const allUsers = await User.getActiveUsers();
+    const recipients = allUsers.filter(u => 
+      u._id.toString() !== senderId.toString() && !u.isSystem
+    );
+
+    if (recipients.length === 0) {
+      return next(new AppError('没有可通知的用户', 400));
+    }
+
+    // 构建通知内容（带标题前缀）
+    const fullContent = title 
+      ? `📢 【${title}】\n\n${content.trim()}`
+      : `📢 【系统通知】\n\n${content.trim()}`;
+
+    // 批量创建消息
+    const messages = [];
+    for (const recipient of recipients) {
+      const conversationId = PrivateMessage.generateConversationId(senderId, recipient._id);
+      messages.push({
+        conversationId,
+        sender: senderId,
+        receiver: recipient._id,
+        content: fullContent,
+        isRead: false
+      });
+    }
+
+    // 批量插入
+    const result = await PrivateMessage.insertMany(messages);
+
+    res.status(201).json({
+      status: 'success',
+      message: `通知已发送给 ${result.length} 位用户`,
+      data: {
+        recipientCount: result.length,
+        content: fullContent,
+        sentAt: new Date()
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    获取广播历史记录（仅系统官方）
+ * @access  仅系统官方账号
+ */
+exports.getBroadcastHistory = async (req, res, next) => {
+  try {
+    const senderId = req.user._id;
+
+    // 验证是否为系统官方
+    const sender = await User.findById(senderId);
+    if (!sender || !sender.isSystem) {
+      return next(new AppError('只有系统官方账号可以查看广播记录', 403));
+    }
+
+    const { page = 1, limit = 20 } = req.query;
+
+    // 查找所有以 📢 【 开头的消息（广播特征）
+    const allBroadcasts = await PrivateMessage.find({
+      sender: senderId,
+      content: /^📢 【/
+    })
+    .sort({ createdAt: -1 })
+    .skip((parseInt(page) - 1) * parseInt(limit))
+    .limit(parseInt(limit));
+
+    // 去重（同一时间发送的相同内容只保留一条）
+    const contentSet = new Set();
+    const broadcasts = allBroadcasts.filter(msg => {
+      const key = msg.content + msg.createdAt.toISOString().slice(0, 16); // 精确到分钟
+      if (contentSet.has(key)) return false;
+      contentSet.add(key);
+      return true;
+    });
+
+    // 获取每个广播的接收人数
+    const broadcastsWithCount = await Promise.all(
+      broadcasts.map(async (msg) => {
+        const count = await PrivateMessage.countDocuments({
+          sender: senderId,
+          content: msg.content,
+          createdAt: {
+            $gte: new Date(msg.createdAt.getTime() - 60000), // 同一分钟内
+            $lte: new Date(msg.createdAt.getTime() + 60000)
+          }
+        });
+        return {
+          _id: msg._id,
+          content: msg.content,
+          recipientCount: count,
+          createdAt: msg.createdAt
+        };
+      })
+    );
+
+    res.status(200).json({
+      status: 'success',
+      data: { broadcasts: broadcastsWithCount }
     });
   } catch (error) {
     next(error);
