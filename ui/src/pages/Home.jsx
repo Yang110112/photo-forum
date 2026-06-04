@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DailyHighlightModal from '../components/DailyHighlightModal';
 import { getPosts } from '../api/posts';
+import api from '../api/axios';
 import { useSelector } from 'react-redux';
 import '../css/Home.css';
 
@@ -11,19 +12,50 @@ export default function HomePage() {
     const [hotPosts, setHotPosts] = useState([]);
     const navigate = useNavigate();
     const { user } = useSelector(state => state.auth);
+    
+    // ✅ 用 ref 存预加载好的图片对象，防止被垃圾回收
+    const preloadedImg = useRef(null);
 
     useEffect(() => {
-        // 获取热门作品
+        const today = new Date().toDateString();
+        const lastShown = localStorage.getItem(`highlightShownDate_${user?._id}`);
+        const shouldShow = lastShown !== today;
+
+        // 获取热门作品（列表展示用，不含图片base64，加 fields 参数最好）
         getPosts({ sortBy: 'likeCount', order: 'desc', limit: 3 })
             .then(res => {
                 const posts = res.data.posts || [];
                 setHotPosts(posts);
+            })
+            .catch(() => {});
 
-                // 每日热门弹窗
-                const today = new Date().toDateString();
-                const lastShown = localStorage.getItem(`highlightShownDate_${user?._id}`);
-                if (lastShown !== today && posts.length > 0) {
-                    setHighlightPost(posts[0]);
+        // ✅ 昨日热门单独请求，今天已经展示过就不请求，节省流量
+        if (!shouldShow) return;
+
+        api.get('/posts/yesterday-highlight')
+            .then(res => {
+            const post = res.data?.data?.post;
+                
+                // 无论有没有作品都存起来（null 时走兜底UI）
+                setHighlightPost(post || null);
+
+                // ✅ 有图片时提前预热到浏览器内存，弹窗打开时直接渲染不卡
+                const firstImage = post?.images?.[0];
+                if (firstImage) {
+                    const img = new Image();
+                    img.src = firstImage; // 浏览器开始解码图片
+                    preloadedImg.current = img; // 存到 ref 防止被 GC
+
+                    // 图片预热完成后再显示弹窗
+                    img.onload = () => {
+                        setTimeout(() => setShowHighlight(true), 500);
+                    };
+                    // 图片加载失败也要显示弹窗
+                    img.onerror = () => {
+                        setTimeout(() => setShowHighlight(true), 500);
+                    };
+                } else {
+                    // 无图片直接显示
                     setTimeout(() => setShowHighlight(true), 500);
                 }
             })
