@@ -20,6 +20,11 @@ const Post = require('../src/models/Post');
 const Friendship = require('../src/models/Friendship');
 const PrivateMessage = require('../src/models/PrivateMessage');
 
+// 昨天的时间（用于测试昨日热门）
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+yesterday.setHours(10, 0, 0, 0);
+
 /**
  * 种子数据配置
  */
@@ -40,6 +45,9 @@ const SEED_CONFIG = {
       password: 'admin123',
       role: 'admin',
       bio: '摄影论坛管理员，热爱摄影，负责维护社区秩序',
+      // ✅ 摄影师认证已通过
+      certStatus: 'approved',
+      certApprovedAt: new Date(),
     },
     {
       username: 'light_hunter',
@@ -127,6 +135,7 @@ const SEED_CONFIG = {
   // 示例摄影帖子数据
   posts: [
     {
+      // 今天发布的公告帖
       title: '欢迎来到摄影论坛！',
       content: `<h2>欢迎各位摄影爱好者加入摄影论坛</h2>
 <p>这是一个专为摄影爱好者打造的交流平台，我们鼓励作品分享、技巧交流和互助问答。</p>
@@ -151,8 +160,13 @@ const SEED_CONFIG = {
         'https://picsum.photos/id/15/800/500',
       ],
       status: 'published',
+      likeCount: 38,
+      viewCount: 520,
+      commentCount: 12,
+      // 今天发布，不设 createdAt（用默认值）
     },
     {
+      // ✅ 昨天发布，点赞数最高 → 昨日热门
       title: '日出时分的金色梯田 — 元阳哈尼梯田拍摄分享',
       content: `<h2>元阳哈尼梯田 — 光与水的交响</h2>
 <p>上周去云南元阳拍摄了哈尼梯田的日出，清晨5点半就到达了多依树观景台等待第一缕阳光。</p>
@@ -176,8 +190,14 @@ const SEED_CONFIG = {
         'https://picsum.photos/id/37/800/500',
       ],
       status: 'published',
+      likeCount: 382,   // ✅ 点赞数最高，昨日热门
+      viewCount: 2100,
+      commentCount: 47,
+      createdAt: yesterday,
+      updatedAt: yesterday,
     },
     {
+      // ✅ 昨天发布，点赞数第二
       title: '城市夜景长曝光技巧 — 如何拍出丝滑的车轨光影',
       content: `<h2>城市夜景长曝光完全指南</h2>
 <p>夜晚的城市有着独特的魅力，车水马龙的灯光拖曳出绚丽的光轨。本文分享我在城市夜景长曝光方面的一些经验。</p>
@@ -205,6 +225,11 @@ const SEED_CONFIG = {
         'https://picsum.photos/id/57/800/500',
       ],
       status: 'published',
+      likeCount: 156,
+      viewCount: 980,
+      commentCount: 23,
+      createdAt: yesterday,
+      updatedAt: yesterday,
     },
   ],
 };
@@ -234,7 +259,7 @@ async function createUsers() {
       ...userData,
     });
     users.push(user);
-    console.log(`  ✓ 用户 ${userData.username} 创建成功`);
+    console.log(`  ✓ 用户 ${userData.username} 创建成功${userData.certStatus === 'approved' ? '（摄影师认证已通过）' : ''}`);
   }
 
   console.log(`共创建 ${users.length} 个用户`);
@@ -265,7 +290,6 @@ async function addOfficialFriendToUsers(users) {
     });
 
     // 发送欢迎消息
-    const PrivateMessage = require('../src/models/PrivateMessage');
     const conversationId = PrivateMessage.generateConversationId(systemUser._id, user._id);
     await PrivateMessage.create({
       conversationId,
@@ -293,7 +317,9 @@ async function createCategories() {
  */
 async function createPosts(users, categories) {
   console.log('正在创建示例帖子...');
-  const adminUser = users.find((u) => u.role === 'admin');
+  const adminUser = users.find((u) => u.username === 'admin');
+  const lightHunter = users.find((u) => u.username === 'light_hunter');
+  const streetShot = users.find((u) => u.username === 'street_shot');
   const landscapeCategory = categories.find((c) => c.slug === 'landscape');
   const streetCategory = categories.find((c) => c.slug === 'street');
 
@@ -305,18 +331,20 @@ async function createPosts(users, categories) {
     },
     {
       ...SEED_CONFIG.posts[1],
-      author: users[1]._id,
+      author: lightHunter._id,
       category: landscapeCategory._id,
     },
     {
       ...SEED_CONFIG.posts[2],
-      author: users[2]._id,
+      author: streetShot._id,
       category: streetCategory._id,
     },
   ];
 
-  const posts = await Post.create(postsData);
+  // ✅ 用 insertMany 并设置 timestamps: false，保留自定义 createdAt
+  const posts = await Post.insertMany(postsData, { timestamps: false });
   console.log(`共创建 ${posts.length} 篇示例帖子`);
+  console.log(`  ✓ 昨日热门测试帖：《${SEED_CONFIG.posts[1].title}》likeCount: ${SEED_CONFIG.posts[1].likeCount}`);
   return posts;
 }
 
@@ -367,7 +395,7 @@ async function seed() {
     console.log('\n========================================');
     console.log('   测试账号信息');
     console.log('========================================');
-    console.log('管理员账号:');
+    console.log('管理员账号（摄影师认证已通过）:');
     console.log('  邮箱: admin@example.com');
     console.log('  密码: admin123\n');
     console.log('测试用户账号:');
@@ -376,6 +404,9 @@ async function seed() {
     console.log('其他测试账号:');
     console.log('  邮箱: street@example.com (street_shot) / 密码: street123');
     console.log('  邮箱: star@example.com (star_traveler) / 密码: star123');
+    console.log('========================================');
+    console.log('\n昨日热门测试数据：');
+    console.log('  《日出时分的金色梯田》createdAt: 昨天，likeCount: 382');
     console.log('========================================\n');
 
     console.log('数据库初始化完成！');

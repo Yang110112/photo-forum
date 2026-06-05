@@ -312,3 +312,36 @@ exports.unlikePost = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    获取昨日热门帖子（点赞数最高）
+ */
+exports.getYesterdayHighlight = async (req, res, next) => {
+  try {
+    // 计算昨天的时间范围
+    const now = new Date();
+    const startOfYesterday = new Date(now);
+    startOfYesterday.setDate(now.getDate() - 1);
+    startOfYesterday.setHours(0, 0, 0, 0);
+
+    const endOfYesterday = new Date(now);
+    endOfYesterday.setDate(now.getDate() - 1);
+    endOfYesterday.setHours(23, 59, 59, 999);
+
+    const post = await Post.findOne({
+      createdAt: { $gte: startOfYesterday, $lte: endOfYesterday },
+      status: 'published'   // ✅ 过滤已删除/未发布的帖子
+    })
+      .sort({ likeCount: -1 })
+      .populate('author', 'username avatar')
+      .populate('category', 'name slug');
+
+    // 无论有没有帖子都返回 200，前端根据 data.post 是否为 null 判断
+    res.status(200).json({
+      status: 'success',
+      data: { post: post || null }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -79,6 +79,14 @@ router.get(
 router.get('/hot', postController.getHotPosts);
 
 /**
+ * @route   GET /api/v1/posts/yesterday-highlight
+ * @desc    获取昨日热门帖子
+ * @access  Public
+ */
+router.get('/yesterday-highlight', postController.getYesterdayHighlight);
+
+
+/**
  * @route   GET /api/v1/posts/:id
  * @desc    获取帖子详情
  * @access  Public

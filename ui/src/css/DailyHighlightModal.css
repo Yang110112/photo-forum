@@ -79,11 +79,19 @@
   box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
 }
 
+/* 昨日无作品时徽章变灰色 */
+.modal-badge--gray {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+}
+
 .modal-media-container {
   width: 100%;
   max-height: 400px;
   overflow: hidden;
   background: #000;
+  /* 固定高度防止骨架屏和图片切换时布局跳动 */
+  min-height: 200px;
 }
 
 .modal-media {
@@ -102,6 +110,20 @@
   background: #f3f4f6;
   color: #9ca3af;
   font-size: 1.1rem;
+}
+
+/* 骨架屏：图片加载中时显示 */
+.modal-skeleton {
+  width: 100%;
+  height: 400px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .modal-info {
@@ -219,12 +241,48 @@
   color: #374151;
 }
 
+/* 昨日无作品兜底样式 */
+.modal-empty-body {
+  padding: 48px 24px 32px;
+  text-align: center;
+}
+
+.modal-empty-icon {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.modal-empty-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 10px;
+}
+
+.modal-empty-desc {
+  font-size: 0.9rem;
+  color: #6b7280;
+  line-height: 1.7;
+  margin: 0;
+}
+
 @media (max-width: 640px) {
   .modal-content {
     border-radius: 16px;
   }
 
   .modal-media {
+    height: 280px;
+  }
+
+  .modal-skeleton {
     height: 280px;
   }
 
