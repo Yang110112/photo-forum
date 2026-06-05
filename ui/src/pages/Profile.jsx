@@ -90,9 +90,9 @@ export default function Profile() {
   if (!user) return <div className="profile-tip">加载中...</div>;
 
   const avatarSrc = previewAvatar || 
-    (user.avatar && !user.avatar.startsWith('/uploads')
-        ? user.avatar
-        : `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff`);
+    (user.avatar && user.avatar.startsWith('/uploads')
+        ? `http://localhost:3000${user.avatar}`
+        : user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff`);
 
   return (
     <div className="profile-container">
