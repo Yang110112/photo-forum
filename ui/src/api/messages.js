@@ -1,6 +1,6 @@
 import api from './axios';
 
-// 发送私信
+// 发送私信（已废弃 — 主流程已改用 WebSocket 的 send-message 事件，保留为备用）
 export const sendMessage = (data) => api.post('/messages', data);
 
 // 获取会话消息
