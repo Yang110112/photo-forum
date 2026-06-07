@@ -15,7 +15,7 @@ router.use(protect);
 
 /**
  * @route   POST /api/v1/messages
- * @desc    发送私信
+ * @desc    发送私信（HTTP备用接口，主流程已改用 WebSocket 的 send-message 事件）
  * @access  Private
  */
 router.post(

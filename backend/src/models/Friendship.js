@@ -80,6 +80,17 @@ friendshipSchema.statics.getPendingRequests = function(userId) {
   }).populate('fromUser', 'username avatar bio').sort({ createdAt: -1 });
 };
 
+// 静态方法：获取好友的用户ID列表（精简版，用于WebSocket在线状态广播）
+friendshipSchema.statics.getFriendList = async function(userId) {
+  const docs = await this.find({
+    $or: [{ fromUser: userId }, { toUser: userId }],
+    status: 'accepted'
+  });
+  return docs.map(doc => {
+    return doc.fromUser.toString() === userId.toString() ? doc.toUser : doc.fromUser;
+  });
+};
+
 // 静态方法：检查是否为好友
 friendshipSchema.statics.areFriends = async function(userId1, userId2) {
   const friendship = await this.findOne({
