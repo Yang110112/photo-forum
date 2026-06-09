@@ -8,7 +8,8 @@ const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
 
 /**
- * @desc    发送私信
+ * @desc    发送私信（已废弃 — 改为 WebSocket 传输，见 app.js 中的 send-message 事件）
+ *         此 HTTP 接口保留为备用，主流程已切换到 Socket.io 实时传输
  */
 exports.sendMessage = async (req, res, next) => {
   try {
@@ -38,7 +39,7 @@ exports.sendMessage = async (req, res, next) => {
 
     res.status(201).json({
       status: 'success',
-      message: '消息发送成功',
+      message: '消息发送成功（HTTP备用通道）',
       data: { message }
     });
   } catch (error) {

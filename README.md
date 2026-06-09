@@ -124,7 +124,6 @@ project1/
 
 ```bash
 git clone <repository-url>
-cd forum-project
 ```
 
 然后分别安装后端和前端的依赖包。后端和前端各自独立管理依赖，需要分别执行安装命令。依赖安装过程可能需要几分钟时间，具体取决于网络连接速度和包的大小。如果遇到网络问题，可以考虑配置 npm 镜像源加速下载。
@@ -167,12 +166,6 @@ NODE_ENV=development
 ```bash
 cd ui
 cp .env.example .env
-```
-
-编辑 .env 文件内容：
-
-```env
-VITE_API_BASE_URL=http://localhost:3000/api/v1
 ```
 
 ### 启动服务

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
 import { message as antMessage } from 'antd';
 import {
   getFriends, getPendingRequests, sendFriendRequest,
@@ -11,7 +12,7 @@ import {
   followUser, unfollowUser, getFollowStats
 } from '../api/follows';
 import {
-  getConversations, getConversation, sendMessage as sendMsg,
+  getConversations, getConversation,
   broadcastMessage, getBroadcastHistory
 } from '../api/messages';
 import '../css/Messages.css';
@@ -41,8 +42,14 @@ export default function Messages() {
   const [broadcasting, setBroadcasting] = useState(false);
   const [broadcastHistory, setBroadcastHistory] = useState([]);
 
+  // ★ 在线状态 & typing 状态 ★
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [typingUser, setTypingUser] = useState(null); // { senderId, username }
+
   const messagesEndRef = useRef(null);
   const searchTimerRef = useRef(null);
+  const socketRef = useRef(null); // Socket.io 引用
+  const typingTimerRef = useRef(null); // typing 超时定时器
 
   // 加载好友列表
   const loadFriends = useCallback(async () => {
@@ -118,33 +125,168 @@ export default function Messages() {
     return () => clearTimeout(searchTimerRef.current);
   }, [searchQuery]);
 
-  // 发送消息
-  const handleSendMessage = async () => {
-    if (!messageText.trim() || !selectedChat || sendingMsg) return;
+  // ======== WebSocket 连接 (Socket.io) ========
+  useEffect(() => {
+    if (!user) return;
 
-    setSendingMsg(true);
-    try {
-      await sendMsg({
-        receiverId: selectedChat.friend._id,
-        content: messageText.trim()
-      });
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-      // 乐观更新
-      const newMsg = {
-        _id: `temp-${Date.now()}`,
-        sender: { _id: user._id, username: user.username, avatar: user.avatar },
-        content: messageText.trim(),
-        isRead: true,
-        createdAt: new Date().toISOString()
-      };
-      setChatMessages(prev => [...prev, newMsg]);
-      setMessageText('');
+    const socket = io(process.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+    socketRef.current = socket;
+
+    // 连接后用 JWT 认证
+    socket.on('connect', () => {
+      socket.emit('auth', { token });
+    });
+
+    socket.on('auth-success', () => {
+      console.log('[WS] 认证成功');
+      // 请求在线好友列表
+      socket.emit('get-online-users');
+    });
+
+    socket.on('auth-error', (data) => {
+      antMessage.error(data.message || 'WebSocket认证失败');
+    });
+
+    // ★ 实时接收新消息（WebSocket推送，替代轮询）★
+    socket.on('new-message', (msg) => {
+      // 如果消息属于当前打开的会话，追加到聊天列表
+      if (selectedChat) {
+        const convId = [user._id, msg.sender._id].sort().join('_');
+        if (convId === selectedChat.conversationId) {
+          setChatMessages(prev => [...prev, msg]);
+        }
+      }
+      // 刷新会话列表
       loadConversations();
-    } catch (err) {
-      antMessage.error(err.response?.data?.message || '发送失败');
-    } finally {
+      antMessage.info(`新消息: ${msg.sender.username}`, {
+        description: msg.content.length > 50 ? msg.content.slice(0, 50) + '...' : msg.content
+      });
+    });
+
+    // ★ 消息发送确认（WebSocket 服务器回执）★
+    socket.on('message-sent', (msg) => {
+      setChatMessages(prev => [...prev, msg]);
+      setMessageText('');
       setSendingMsg(false);
+      loadConversations();
+    });
+
+    // ★ 已读回执（对方已读我的消息）★
+    socket.on('message-read', (data) => {
+      // 按会话批量标记已读
+      if (data.conversationId && selectedChat?.conversationId === data.conversationId) {
+        setChatMessages(prev =>
+          prev.map(m => (!m.isOwn && !m.isRead ? { ...m, isRead: true } : m))
+        );
+      }
+    });
+
+    // ★ 在线用户列表（初始加载）★
+    socket.on('online-users', (data) => {
+      setOnlineUsers(new Set(data.userIds || []));
+    });
+
+    // ★ 好友上线通知 ★
+    socket.on('user-online', (data) => {
+      setOnlineUsers(prev => new Set([...prev, data.userId]));
+    });
+
+    // ★ 好友离线通知 ★
+    socket.on('user-offline', (data) => {
+      setOnlineUsers(prev => {
+        const next = new Set(prev);
+        next.delete(data.userId);
+        return next;
+      });
+    });
+
+    // ★ 对方正在输入 ★
+    socket.on('user-typing', (data) => {
+      if (selectedChat && data.senderId === selectedChat.friend._id) {
+        setTypingUser({ senderId: data.senderId });
+      }
+    });
+
+    // ★ 对方停止输入 ★
+    socket.on('user-stop-typing', (data) => {
+      if (typingUser?.senderId === data.senderId) {
+        setTypingUser(null);
+      }
+    });
+
+    // ★ 会话列表实时更新 ★
+    socket.on('conversation-update', (data) => {
+      setConversations(prev => {
+        const existing = prev.find(c => c.conversationId === data.conversationId);
+        if (existing) {
+          return [
+            ...prev.filter(c => c.conversationId !== data.conversationId),
+            {
+              ...existing,
+              lastMessage: data.lastMessage,
+              lastTime: data.lastTime,
+              unreadCount: data.unreadCount !== undefined
+                ? existing.unreadCount + data.unreadCount
+                : existing.unreadCount
+            }
+          ].sort((a, b) => new Date(b.lastTime) - new Date(a.lastTime));
+        }
+        return prev;
+      });
+    });
+
+    // 错误处理
+    socket.on('error', (data) => {
+      antMessage.error(data.message || 'WebSocket通信失败');
+      setSendingMsg(false);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user, selectedChat, typingUser]);
+
+  // ★ 通过 WebSocket 发送消息（替代原来的 HTTP POST）★
+  const handleSendMessage = () => {
+    if (!messageText.trim() || !selectedChat || sendingMsg) return;
+    if (!socketRef.current?.connected) {
+      antMessage.error('WebSocket未连接，请稍后重试');
+      return;
     }
+
+    // 停止 typing 状态
+    socketRef.current.emit('stop-typing', { receiverId: selectedChat.friend._id });
+    setSendingMsg(true);
+    socketRef.current.emit('send-message', {
+      receiverId: selectedChat.friend._id,
+      content: messageText.trim()
+    });
+  };
+
+  // ★ 输入中事件 — 发送 typing 状态给对方 ★
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setMessageText(val);
+
+    if (!socketRef.current?.connected || !selectedChat) return;
+    if (!val.trim()) {
+      socketRef.current.emit('stop-typing', { receiverId: selectedChat.friend._id });
+      return;
+    }
+    socketRef.current.emit('typing', { receiverId: selectedChat.friend._id });
+    // 3秒无输入自动停止
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      socketRef.current?.emit('stop-typing', { receiverId: selectedChat.friend._id });
+    }, 3000);
   };
 
   // 发送好友请求
@@ -203,22 +345,33 @@ export default function Messages() {
 
   // 开始聊天
   const handleStartChat = (friend) => {
+    const conversationId = [user._id, friend._id].sort().join('_');
     setSelectedChat({
-      conversationId: null,
+      conversationId,
       friend,
       lastMessage: '',
       lastTime: null,
       unreadCount: 0
     });
+    setTypingUser(null);
     loadChatMessages(friend._id);
     setActiveTab('chats');
+    // ★ 通过 WebSocket 发送已读回执 ★
+    if (socketRef.current?.connected) {
+      socketRef.current.emit('message-read', { conversationId });
+    }
   };
 
   // 选中会话
   const handleSelectConversation = async (conv) => {
     setSelectedChat(conv);
     setActiveTab('chats');
+    setTypingUser(null);
     await loadChatMessages(conv.friend._id);
+    // ★ 通过 WebSocket 发送已读回执 ★
+    if (conv.conversationId && socketRef.current?.connected) {
+      socketRef.current.emit('message-read', { conversationId: conv.conversationId });
+    }
     // 刷新会话列表清除未读
     loadConversations();
   };
@@ -380,12 +533,15 @@ export default function Messages() {
                   className={`chat-item ${selectedChat?.friend?._id === conv.friend._id ? 'active' : ''}`}
                   onClick={() => handleSelectConversation(conv)}
                 >
-                  <img
-                    src={getAvatar(conv.friend.avatar, conv.friend.username)}
-                    alt={conv.friend.username}
-                    className="chat-avatar"
-                    onError={(e) => { e.target.src = getAvatar('', conv.friend.username); }}
-                  />
+                  <div className="chat-avatar-wrapper">
+                    <img
+                      src={getAvatar(conv.friend.avatar, conv.friend.username)}
+                      alt={conv.friend.username}
+                      className="chat-avatar"
+                      onError={(e) => { e.target.src = getAvatar('', conv.friend.username); }}
+                    />
+                    {onlineUsers.has(conv.friend._id) && <span className="online-dot"></span>}
+                  </div>
                   <div className="chat-info">
                     <div className="chat-header-row">
                       <span className="chat-name">{conv.friend.username}</span>
@@ -440,12 +596,15 @@ export default function Messages() {
                 {pendingRequests.length > 0 && <div className="requests-header">我的好友</div>}
                 {friends.map(friend => (
                   <div key={friend._id} className="friend-item">
-                    <img
-                      src={getAvatar(friend.avatar, friend.username)}
-                      alt={friend.username}
-                      className="friend-avatar"
-                      onError={(e) => { e.target.src = getAvatar('', friend.username); }}
-                    />
+                    <div className="friend-avatar-wrapper">
+                      <img
+                        src={getAvatar(friend.avatar, friend.username)}
+                        alt={friend.username}
+                        className="friend-avatar"
+                        onError={(e) => { e.target.src = getAvatar('', friend.username); }}
+                      />
+                      {onlineUsers.has(friend._id) && <span className="online-dot"></span>}
+                    </div>
                     <div className="friend-info">
                       <span className="friend-name">
                         {friend.username}
@@ -537,17 +696,26 @@ export default function Messages() {
         {selectedChat ? (
           <>
             <div className="chat-header">
-              <img
-                src={getAvatar(selectedChat.friend?.avatar, selectedChat.friend?.username)}
-                alt={selectedChat.friend?.username}
-                className="chat-header-avatar"
-              />
+              <div className="chat-header-avatar-wrapper">
+                <img
+                  src={getAvatar(selectedChat.friend?.avatar, selectedChat.friend?.username)}
+                  alt={selectedChat.friend?.username}
+                  className="chat-header-avatar"
+                />
+                {onlineUsers.has(selectedChat.friend?._id) && <span className="online-dot online-dot-lg"></span>}
+              </div>
               <div>
                 <h3>
                   {selectedChat.friend?.username}
                   {selectedChat.friend?.isSystem && <span className="system-tag">官方</span>}
                 </h3>
-                <span className="online-status">在线</span>
+                {typingUser && typingUser.senderId === selectedChat.friend?._id ? (
+                  <span className="typing-status">正在输入<span className="typing-dots"><span>.</span><span>.</span><span>.</span></span></span>
+                ) : onlineUsers.has(selectedChat.friend?._id) ? (
+                  <span className="online-status online">在线</span>
+                ) : (
+                  <span className="online-status offline">离线</span>
+                )}
               </div>
             </div>
 
@@ -577,7 +745,7 @@ export default function Messages() {
                 type="text"
                 placeholder="输入消息..."
                 value={messageText}
-                onChange={(e) => setMessageText(e.target.value)}
+                onChange={handleInputChange}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                 disabled={sendingMsg}
               />

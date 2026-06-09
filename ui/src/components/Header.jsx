@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { getUnreadCount } from '../api/messages';
 import { getPendingRequests } from '../api/friends';
+import { io } from 'socket.io-client';
 import '../css/Header.css';
 
 // 分类数据
@@ -26,10 +27,12 @@ export default function Header() {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [unreadMsgCount, setUnreadMsgCount] = useState(0);
     const [pendingFriendCount, setPendingFriendCount] = useState(0);
+    const socketRef = useRef(null);
 
-    // 定时轮询未读消息和好友请求
+    // 初始加载未读数 + WebSocket 实时更新
     useEffect(() => {
         if (!user) return;
+
         const fetchCounts = async () => {
             try {
                 const [msgRes, friendRes] = await Promise.all([
@@ -43,8 +46,42 @@ export default function Header() {
             }
         };
         fetchCounts();
-        const interval = setInterval(fetchCounts, 30000);
-        return () => clearInterval(interval);
+
+        // ★ 通过 WebSocket 实时监听新消息更新未读数（替代30秒轮询）★
+        const token = localStorage.getItem('token');
+        if (token) {
+            const socket = io(process.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
+            socketRef.current = socket;
+
+            socket.on('connect', () => {
+                socket.emit('auth', { token });
+            });
+
+            // ★ 收到新消息时实时更新未读数 ★
+            socket.on('new-message', () => {
+                setUnreadMsgCount(prev => prev + 1);
+                fetchCounts(); // 同步最新数据
+            });
+
+            // ★ 收到已读回执时刷新未读数 ★
+            socket.on('message-read', () => {
+                fetchCounts();
+            });
+
+            // ★ 收到会话更新时刷新未读数 ★
+            socket.on('conversation-update', () => {
+                fetchCounts();
+            });
+
+            return () => {
+                socket.disconnect();
+            };
+        }
     }, [user]);
 
     const totalNotifications = unreadMsgCount + pendingFriendCount;
