@@ -8,17 +8,17 @@ import { io } from 'socket.io-client';
 import '../css/Header.css';
 
 // 分类数据
-const categories = [
-  { slug: 'landscape', name: '风光摄影', emoji: '🏔️' },
-  { slug: 'portrait', name: '人像摄影', emoji: '👤' },
-  { slug: 'street', name: '街头摄影', emoji: '🏙️' },
-  { slug: 'animal', name: '动物摄影', emoji: '🐾' },
-  { slug: 'food', name: '美食摄影', emoji: '🍽️' },
-  { slug: 'astrophotography', name: '星空摄影', emoji: '🌌' },
+const activities = [
+  { slug: 'weekly-challenge', name: '每周挑战', emoji: '🏆', status: '进行中' },
+  { slug: 'theme-contest', name: '主题摄影赛', emoji: '📸', status: '进行中' },
+  { slug: 'beginner-event', name: '新手专场', emoji: '🌱', status: '即将开始' },
+  { slug: 'season-contest', name: '季度大赛', emoji: '🎖️', status: '即将开始' },
+  { slug: 'past-events', name: '往期活动', emoji: '📅', status: '已结束' },
 ];
 
 export default function Header() {
     const { user } = useSelector(state => state.auth);
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
@@ -28,7 +28,7 @@ export default function Header() {
     const [unreadMsgCount, setUnreadMsgCount] = useState(0);
     const [pendingFriendCount, setPendingFriendCount] = useState(0);
     const socketRef = useRef(null);
-
+    const hideTimer = useRef(null);
     // 初始加载未读数 + WebSocket 实时更新
     useEffect(() => {
         if (!user) return;
@@ -50,7 +50,7 @@ export default function Header() {
         // ★ 通过 WebSocket 实时监听新消息更新未读数（替代30秒轮询）★
         const token = localStorage.getItem('token');
         if (token) {
-            const socket = io(process.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+            const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000', {
                 transports: ['websocket', 'polling'],
                 reconnection: true,
                 reconnectionAttempts: 5,
@@ -112,28 +112,44 @@ export default function Header() {
                     <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>首页</Link>
                     <Link to="/forum" className={`nav-link ${location.pathname === '/forum' && !currentCategory ? 'active' : ''}`}>论坛</Link>
 
-                    {/* 分类下拉菜单 */}
+                    {/* 活动下拉菜单 */}
                     <div
                         className="nav-dropdown"
-                        onMouseEnter={() => setShowCategories(true)}
-                        onMouseLeave={() => setShowCategories(false)}
+                        onMouseEnter={() => {
+                            clearTimeout(hideTimer.current);
+                            setShowCategories(true);
+                        }}
+                        onMouseLeave={() => {
+                            hideTimer.current = setTimeout(() => setShowCategories(false), 100);
+                        }}
                     >
-                        <button className={`nav-link nav-dropdown-btn ${currentCategory ? 'active' : ''}`}>
-                            分类 {showCategories ? '▲' : '▼'}
+                        <button className={`nav-link nav-dropdown-btn ${location.pathname.startsWith('/activity') ? 'active' : ''}`}>
+                        
+                            活动 {showCategories ? '▲' : '▼'}
                         </button>
 
                         {showCategories && (
-                            <div className="dropdown-menu">
-                                <div className="dropdown-header">摄影分类</div>
-                                {categories.map(cat => (
+                            <div className="dropdown-menu"
+                                onMouseEnter={() => clearTimeout(hideTimer.current)}
+                                onMouseLeave={() => {
+                                    hideTimer.current = setTimeout(() => setShowCategories(false), 100);
+                                }}
+                            >
+                                <div className="dropdown-header">摄影活动</div>
+                                {activities.map(act => (
                                     <div
-                                        key={cat.slug}
-                                        className={`dropdown-item ${currentCategory === cat.slug ? 'selected' : ''}`}
-                                        onClick={() => handleCategoryClick(cat.slug)}
+                                        key={act.slug}
+                                        className="dropdown-item"
+                                        onClick={() => {
+                                            setShowCategories(false);
+                                            navigate(`/activity/${act.slug}`);
+                                        }}
                                     >
-                                        <span className="dropdown-emoji">{cat.emoji}</span>
-                                        <span className="dropdown-name">{cat.name}</span>
-                                        {currentCategory === cat.slug && <span className="check-mark">✓</span>}
+                                        <span className="dropdown-emoji">{act.emoji}</span>
+                                        <span className="dropdown-name">{act.name}</span>
+                                        <span className={`activity-status ${act.status === '进行中' ? 'status-active' : act.status === '即将开始' ? 'status-soon' : 'status-ended'}`}>
+                                            {act.status}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
@@ -162,7 +178,10 @@ export default function Header() {
                                 onMouseLeave={() => setShowUserMenu(false)}
                             >
                                 <img
-                                    src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff&size=36`}
+                                    src={user.avatar 
+                                    ? `${BASE_URL}${user.avatar}` 
+                                    : `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff&size=36`
+                                }
                                     alt={user.username}
                                     className="nav-avatar"
                                     onError={(e) => {
@@ -191,16 +210,19 @@ export default function Header() {
                     <Link to="/" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>首页</Link>
                     <Link to="/forum" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>论坛</Link>
 
-                    <div className="mobile-menu-section">分类</div>
-                    {categories.map(cat => (
+                    <div className="mobile-menu-section">活动</div>
+                    {activities.map(act => (
                         <Link
-                            key={cat.slug}
-                            to={`/forum?category=${cat.slug}`}
-                            className={`mobile-menu-item ${currentCategory === cat.slug ? 'active' : ''}`}
+                            key={act.slug}
+                            to={`/activity/${act.slug}`}
+                            className="mobile-menu-item"
                             onClick={() => setShowMobileMenu(false)}
                         >
-                            <span className="mobile-menu-emoji">{cat.emoji}</span>
-                            {cat.name}
+                            <span className="mobile-menu-emoji">{act.emoji}</span>
+                            {act.name}
+                            <span className={`activity-status ${act.status === '进行中' ? 'status-active' : act.status === '即将开始' ? 'status-soon' : 'status-ended'}`}>
+                                {act.status}
+                            </span>
                         </Link>
                     ))}
 
@@ -214,27 +236,6 @@ export default function Header() {
                             <Link to="/profile" className="mobile-menu-item" onClick={() => setShowMobileMenu(false)}>个人中心</Link>
                         </>
                     )}
-                </div>
-            )}
-
-            {/* 分类标签栏 - 显示在论坛页面 */}
-            {location.pathname === '/forum' && (
-                <div className="category-tabs">
-                    <Link
-                        to="/forum"
-                        className={`category-tab ${!currentCategory ? 'active' : ''}`}
-                    >
-                        全部作品
-                    </Link>
-                    {categories.map(cat => (
-                        <Link
-                            key={cat.slug}
-                            to={`/forum?category=${cat.slug}`}
-                            className={`category-tab ${currentCategory === cat.slug ? 'active' : ''}`}
-                        >
-                            {cat.emoji} {cat.name}
-                        </Link>
-                    ))}
                 </div>
             )}
         </header>

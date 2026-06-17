@@ -132,7 +132,7 @@ export default function Messages() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const socket = io(process.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+    const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -344,37 +344,40 @@ export default function Messages() {
   };
 
   // 开始聊天
-  const handleStartChat = (friend) => {
+ const handleStartChat = (friend) => {
     const conversationId = [user._id, friend._id].sort().join('_');
-    setSelectedChat({
-      conversationId,
-      friend,
-      lastMessage: '',
-      lastTime: null,
-      unreadCount: 0
-    });
+    setSelectedChat({ conversationId, friend, lastMessage: '', lastTime: null, unreadCount: 0 });
     setTypingUser(null);
+
+    // ★ 本地立即清零未读数 ★
+    setConversations(prev =>
+        prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: 0 } : c)
+    );
+
     loadChatMessages(friend._id);
     setActiveTab('chats');
-    // ★ 通过 WebSocket 发送已读回执 ★
     if (socketRef.current?.connected) {
-      socketRef.current.emit('message-read', { conversationId });
+        socketRef.current.emit('message-read', { conversationId });
     }
-  };
+};
 
   // 选中会话
-  const handleSelectConversation = async (conv) => {
+const handleSelectConversation = async (conv) => {
     setSelectedChat(conv);
     setActiveTab('chats');
     setTypingUser(null);
+
+    // ★ 本地立即清零未读数 ★
+    setConversations(prev =>
+        prev.map(c => c.conversationId === conv.conversationId ? { ...c, unreadCount: 0 } : c)
+    );
+
     await loadChatMessages(conv.friend._id);
-    // ★ 通过 WebSocket 发送已读回执 ★
     if (conv.conversationId && socketRef.current?.connected) {
-      socketRef.current.emit('message-read', { conversationId: conv.conversationId });
+        socketRef.current.emit('message-read', { conversationId: conv.conversationId });
     }
-    // 刷新会话列表清除未读
     loadConversations();
-  };
+};
 
   // 关注/取消关注
   const handleToggleFollow = async (targetUserId, isFollowing) => {
@@ -409,10 +412,12 @@ export default function Messages() {
   };
 
   // 获取头像
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
   const getAvatar = (avatarUrl, username) => {
-    if (avatarUrl && !avatarUrl.startsWith('/uploads')) return avatarUrl;
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(username || 'U')}&background=random&color=fff`;
-  };
+  if (!avatarUrl) return `https://ui-avatars.com/api/?name=${encodeURIComponent(username || 'U')}&background=random&color=fff`;
+  if (avatarUrl.startsWith('/uploads')) return `${BASE_URL}${avatarUrl}`;
+  return avatarUrl;
+};
 
   // 获取好友状态文本
   const getFriendStatusText = (status) => {
@@ -489,7 +494,8 @@ export default function Messages() {
                 📢 广播通知
               </button>
             )}
-            <button className="add-friend-btn" onClick={() => setShowAddFriend(true)}>
+            <button className="add-friend-btn" onClick={() => {setShowAddFriend(true);document.body.style.overflow = 'hidden'
+            }}>
               + 添加好友
             </button>
           </div>
@@ -862,7 +868,12 @@ export default function Messages() {
                 <div className="empty-state"><p>输入关键词搜索用户</p></div>
               )}
             </div>
-            <button className="modal-close-btn" onClick={() => { setShowAddFriend(false); setSearchQuery(''); setSearchResults([]); }}>
+            <button className="modal-close-btn" onClick={() => { 
+              setShowAddFriend(false); 
+              document.body.style.overflow = ''; // 加这行
+              setSearchQuery(''); 
+              setSearchResults([]); 
+            }}>
               关闭
             </button>
           </div>

@@ -14,6 +14,7 @@ import Messages from '../pages/Messages';
 import MyPosts from '../pages/MyPosts';
 import PhotographerCert from '../pages/PhotographerCert';
 import BookingRequests from '../pages/BookingRequests';
+import ComingSoon from '../pages/ComingSoon';
 
 const ProtectedRoute = ({ children }) => {
     const { token } = useSelector(state => state.auth);
@@ -26,6 +27,7 @@ const routes = [
         children: [
             { path: '/', element: <Home /> },
             { path: '/forum', element: <Forum /> },
+            { path: '/activity/:slug', element: <ComingSoon /> },
             { path: '/post/:id', element: <PostDetail /> },
             { path: '/create', element: <CreatePost /> },
             { path: '/profile', element: <Profile /> },

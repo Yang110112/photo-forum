@@ -191,6 +191,8 @@
     cursor: pointer;
     font-size: 0.95rem;
     color: #57534e;
+    width: 100%;
+   padding: 8px 4px;
 }
 
 .nav-dropdown-btn:hover {
@@ -262,6 +264,30 @@
     margin-left: auto;
     color: #f97316;
     font-weight: bold;
+}
+
+/* 活动状态标签 */
+.activity-status {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+    font-weight: 500;
+}
+
+.status-active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.status-soon {
+    background: #fef9c3;
+    color: #ca8a04;
+}
+
+.status-ended {
+    background: #f3f4f6;
+    color: #9ca3af;
 }
 
 /* 移动端菜单 */
