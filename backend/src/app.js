@@ -39,6 +39,7 @@ const bookingRouter = require('./routes/bookings');
 const friendRoutes = require('./routes/friends');
 const followRoutes = require('./routes/follows');
 const messageRoutes = require('./routes/messages');
+const { setIO, onlineUsers } = require('./socket');
 
 // 导入中间件
 const { errorHandler } = require('./middleware/errorHandler');
@@ -107,9 +108,8 @@ const io = new Server(server, {
   pingTimeout: 60000,
   pingInterval: 25000
 });
+setIO(io);
 
-// 在线用户映射: userId -> socket.id
-const onlineUsers = new Map();
 // socket.id -> userId
 const socketUsers = new Map();
 

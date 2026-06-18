@@ -6,6 +6,7 @@ const PrivateMessage = require('../models/PrivateMessage');
 const Friendship = require('../models/Friendship');
 const User = require('../models/User');
 const { AppError } = require('../middleware/errorHandler');
+const { getIO, getOnlineUsers } = require('../socket');
 
 /**
  * @desc    发送私信（已废弃 — 改为 WebSocket 传输，见 app.js 中的 send-message 事件）
@@ -226,15 +227,15 @@ exports.broadcastMessage = async (req, res, next) => {
     if (!sender) {
       return next(new AppError('用户不存在', 404));
     }
-    if (!sender.isSystem) {
-      return next(new AppError('只有系统官方账号才能发送广播通知', 403));
-    }
+    if (sender.role !== 'admin') {
+  return next(new AppError('只有管理员才能发送广播通知', 403));
+}
 
     // 获取所有非系统、未删除的活跃用户
     const allUsers = await User.getActiveUsers();
     const recipients = allUsers.filter(u => 
-      u._id.toString() !== senderId.toString() && !u.isSystem
-    );
+  u._id.toString() !== senderId.toString()
+);
 
     if (recipients.length === 0) {
       return next(new AppError('没有可通知的用户', 400));
@@ -247,6 +248,8 @@ exports.broadcastMessage = async (req, res, next) => {
 
     // 批量创建消息
     const messages = [];
+    const io = getIO();
+    const onlineUsers = getOnlineUsers();
     for (const recipient of recipients) {
       const conversationId = PrivateMessage.generateConversationId(senderId, recipient._id);
       messages.push({
@@ -260,6 +263,32 @@ exports.broadcastMessage = async (req, res, next) => {
 
     // 批量插入
     const result = await PrivateMessage.insertMany(messages);
+
+    // 实时推送给所有在线的接收用户
+for (const recipient of recipients) {
+  const recipientSocketId = onlineUsers.get(recipient._id.toString());
+  if (recipientSocketId) {
+    io.to(recipientSocketId).emit('new-message', {
+      _id: Date.now().toString(),
+      conversationId: PrivateMessage.generateConversationId(senderId, recipient._id),
+      content: fullContent,
+      isRead: false,
+      createdAt: new Date(),
+      sender: {
+        _id: sender._id,
+        username: sender.username,
+        avatar: sender.avatar
+      }
+    });
+    // 更新会话列表
+    io.to(recipientSocketId).emit('conversation-update', {
+      conversationId: PrivateMessage.generateConversationId(senderId, recipient._id),
+      lastMessage: fullContent,
+      lastTime: new Date(),
+      unreadCount: 1
+    });
+  }
+}
 
     res.status(201).json({
       status: 'success',
@@ -285,8 +314,8 @@ exports.getBroadcastHistory = async (req, res, next) => {
 
     // 验证是否为系统官方
     const sender = await User.findById(senderId);
-    if (!sender || !sender.isSystem) {
-      return next(new AppError('只有系统官方账号可以查看广播记录', 403));
+    if (!sender || sender.role !== 'admin') {
+      return next(new AppError('只有管理员才能查看广播记录', 403));
     }
 
     const { page = 1, limit = 20 } = req.query;

@@ -44,12 +44,26 @@ export default function Messages() {
 
   // ★ 在线状态 & typing 状态 ★
   const [onlineUsers, setOnlineUsers] = useState(new Set());
-  const [typingUser, setTypingUser] = useState(null); // { senderId, username }
+  const [typingUser, setTypingUser] = useState(null);
 
   const messagesEndRef = useRef(null);
   const searchTimerRef = useRef(null);
-  const socketRef = useRef(null); // Socket.io 引用
-  const typingTimerRef = useRef(null); // typing 超时定时器
+  const socketRef = useRef(null);
+  const typingTimerRef = useRef(null);
+
+  // ★ 用 ref 保存最新的 selectedChat 和 typingUser，解决闭包问题 ★
+  const selectedChatRef = useRef(null);
+  const typingUserRef = useRef(null);
+
+  // 每次 selectedChat 变化时同步到 ref
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
+
+  // 每次 typingUser 变化时同步到 ref
+  useEffect(() => {
+    typingUserRef.current = typingUser;
+  }, [typingUser]);
 
   // 加载好友列表
   const loadFriends = useCallback(async () => {
@@ -126,13 +140,14 @@ export default function Messages() {
   }, [searchQuery]);
 
   // ======== WebSocket 连接 (Socket.io) ========
+  // ★ 依赖数组只保留 user，避免 selectedChat/typingUser 变化时重复连接 ★
   useEffect(() => {
     if (!user) return;
 
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -147,7 +162,6 @@ export default function Messages() {
 
     socket.on('auth-success', () => {
       console.log('[WS] 认证成功');
-      // 请求在线好友列表
       socket.emit('get-online-users');
     });
 
@@ -155,23 +169,21 @@ export default function Messages() {
       antMessage.error(data.message || 'WebSocket认证失败');
     });
 
-    // ★ 实时接收新消息（WebSocket推送，替代轮询）★
+    // ★ 实时接收新消息 — 用 ref 读取最新 selectedChat ★
     socket.on('new-message', (msg) => {
-      // 如果消息属于当前打开的会话，追加到聊天列表
-      if (selectedChat) {
+      const current = selectedChatRef.current;
+      if (current && msg.sender?._id) {
         const convId = [user._id, msg.sender._id].sort().join('_');
-        if (convId === selectedChat.conversationId) {
+        if (convId === current.conversationId) {
           setChatMessages(prev => [...prev, msg]);
         }
       }
-      // 刷新会话列表
       loadConversations();
-      antMessage.info(`新消息: ${msg.sender.username}`, {
-        description: msg.content.length > 50 ? msg.content.slice(0, 50) + '...' : msg.content
-      });
+      const preview = msg.content?.length > 50 ? msg.content.slice(0, 50) + '...' : (msg.content || '');
+      antMessage.info(`新消息: ${msg.sender?.username || '好友'} - ${preview}`, 3);
     });
 
-    // ★ 消息发送确认（WebSocket 服务器回执）★
+    // ★ 消息发送确认 ★
     socket.on('message-sent', (msg) => {
       setChatMessages(prev => [...prev, msg]);
       setMessageText('');
@@ -179,27 +191,27 @@ export default function Messages() {
       loadConversations();
     });
 
-    // ★ 已读回执（对方已读我的消息）★
+    // ★ 已读回执 — 用 ref 读取最新 selectedChat ★
     socket.on('message-read', (data) => {
-      // 按会话批量标记已读
-      if (data.conversationId && selectedChat?.conversationId === data.conversationId) {
+      const current = selectedChatRef.current;
+      if (data.conversationId && current?.conversationId === data.conversationId) {
         setChatMessages(prev =>
           prev.map(m => (!m.isOwn && !m.isRead ? { ...m, isRead: true } : m))
         );
       }
     });
 
-    // ★ 在线用户列表（初始加载）★
+    // ★ 在线用户列表 ★
     socket.on('online-users', (data) => {
       setOnlineUsers(new Set(data.userIds || []));
     });
 
-    // ★ 好友上线通知 ★
+    // ★ 好友上线 ★
     socket.on('user-online', (data) => {
       setOnlineUsers(prev => new Set([...prev, data.userId]));
     });
 
-    // ★ 好友离线通知 ★
+    // ★ 好友离线 ★
     socket.on('user-offline', (data) => {
       setOnlineUsers(prev => {
         const next = new Set(prev);
@@ -208,16 +220,17 @@ export default function Messages() {
       });
     });
 
-    // ★ 对方正在输入 ★
+    // ★ 对方正在输入 — 用 ref 读取最新 selectedChat ★
     socket.on('user-typing', (data) => {
-      if (selectedChat && data.senderId === selectedChat.friend._id) {
+      const current = selectedChatRef.current;
+      if (current && data.senderId === current.friend._id) {
         setTypingUser({ senderId: data.senderId });
       }
     });
 
-    // ★ 对方停止输入 ★
+    // ★ 对方停止输入 — 用 ref 读取最新 typingUser ★
     socket.on('user-stop-typing', (data) => {
-      if (typingUser?.senderId === data.senderId) {
+      if (typingUserRef.current?.senderId === data.senderId) {
         setTypingUser(null);
       }
     });
@@ -252,17 +265,15 @@ export default function Messages() {
     return () => {
       socket.disconnect();
     };
-  }, [user, selectedChat, typingUser]);
+  }, [user]); // ★ 只依赖 user，不再依赖 selectedChat/typingUser ★
 
-  // ★ 通过 WebSocket 发送消息（替代原来的 HTTP POST）★
+  // ★ 通过 WebSocket 发送消息 ★
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedChat || sendingMsg) return;
     if (!socketRef.current?.connected) {
       antMessage.error('WebSocket未连接，请稍后重试');
       return;
     }
-
-    // 停止 typing 状态
     socketRef.current.emit('stop-typing', { receiverId: selectedChat.friend._id });
     setSendingMsg(true);
     socketRef.current.emit('send-message', {
@@ -271,7 +282,7 @@ export default function Messages() {
     });
   };
 
-  // ★ 输入中事件 — 发送 typing 状态给对方 ★
+  // ★ 输入中事件 ★
   const handleInputChange = (e) => {
     const val = e.target.value;
     setMessageText(val);
@@ -282,7 +293,6 @@ export default function Messages() {
       return;
     }
     socketRef.current.emit('typing', { receiverId: selectedChat.friend._id });
-    // 3秒无输入自动停止
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     typingTimerRef.current = setTimeout(() => {
       socketRef.current?.emit('stop-typing', { receiverId: selectedChat.friend._id });
@@ -344,40 +354,34 @@ export default function Messages() {
   };
 
   // 开始聊天
- const handleStartChat = (friend) => {
+  const handleStartChat = (friend) => {
     const conversationId = [user._id, friend._id].sort().join('_');
     setSelectedChat({ conversationId, friend, lastMessage: '', lastTime: null, unreadCount: 0 });
     setTypingUser(null);
-
-    // ★ 本地立即清零未读数 ★
     setConversations(prev =>
-        prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: 0 } : c)
+      prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: 0 } : c)
     );
-
     loadChatMessages(friend._id);
     setActiveTab('chats');
     if (socketRef.current?.connected) {
-        socketRef.current.emit('message-read', { conversationId });
+      socketRef.current.emit('message-read', { conversationId });
     }
-};
+  };
 
   // 选中会话
-const handleSelectConversation = async (conv) => {
+  const handleSelectConversation = async (conv) => {
     setSelectedChat(conv);
     setActiveTab('chats');
     setTypingUser(null);
-
-    // ★ 本地立即清零未读数 ★
     setConversations(prev =>
-        prev.map(c => c.conversationId === conv.conversationId ? { ...c, unreadCount: 0 } : c)
+      prev.map(c => c.conversationId === conv.conversationId ? { ...c, unreadCount: 0 } : c)
     );
-
     await loadChatMessages(conv.friend._id);
     if (conv.conversationId && socketRef.current?.connected) {
-        socketRef.current.emit('message-read', { conversationId: conv.conversationId });
+      socketRef.current.emit('message-read', { conversationId: conv.conversationId });
     }
     loadConversations();
-};
+  };
 
   // 关注/取消关注
   const handleToggleFollow = async (targetUserId, isFollowing) => {
@@ -389,7 +393,6 @@ const handleSelectConversation = async (conv) => {
         await followUser(targetUserId);
         antMessage.success('关注成功');
       }
-      // 刷新搜索结果
       if (searchQuery) {
         const res = await searchUsers(searchQuery);
         setSearchResults(res.data.data.users || []);
@@ -411,12 +414,13 @@ const handleSelectConversation = async (conv) => {
     return date.toLocaleDateString('zh-CN');
   };
 
-  // 获取头像
+  // 获取头像（BASE_URL 去掉 /api/v1 后缀，只保留域名+端口）
   const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
   const getAvatar = (avatarUrl, username) => {
-  if (!avatarUrl) return `https://ui-avatars.com/api/?name=${encodeURIComponent(username || 'U')}&background=random&color=fff`;
-  if (avatarUrl.startsWith('/uploads')) return `${BASE_URL}${avatarUrl}`;
-  return avatarUrl;
+    if (!avatarUrl || avatarUrl === '/uploads/default-avatar.png') 
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(username || 'U')}&background=random&color=fff`;
+    if (avatarUrl.startsWith('/uploads')) return `${BASE_URL}${avatarUrl}`;
+    return avatarUrl;
 };
 
   // 获取好友状态文本
@@ -431,7 +435,7 @@ const handleSelectConversation = async (conv) => {
   };
 
   // 判断当前用户是否为系统官方
-  const isSystemAccount = user?.isSystem || false;
+  const isSystemAccount = user?.role === 'admin';
 
   // 发送广播通知
   const handleBroadcast = async () => {
@@ -453,7 +457,7 @@ const handleSelectConversation = async (conv) => {
       setBroadcastContent('');
       setShowBroadcast(false);
       loadBroadcastHistory();
-      loadConversations(); // 刷新会话列表
+      loadConversations();
     } catch (err) {
       antMessage.error(err.response?.data?.message || '广播发送失败');
     } finally {
@@ -494,8 +498,7 @@ const handleSelectConversation = async (conv) => {
                 📢 广播通知
               </button>
             )}
-            <button className="add-friend-btn" onClick={() => {setShowAddFriend(true);document.body.style.overflow = 'hidden'
-            }}>
+            <button className="add-friend-btn" onClick={() => { setShowAddFriend(true); document.body.style.overflow = 'hidden'; }}>
               + 添加好友
             </button>
           </div>
@@ -567,7 +570,6 @@ const handleSelectConversation = async (conv) => {
         {/* 好友列表 */}
         {activeTab === 'friends' && (
           <div className="friends-list">
-            {/* 待处理请求 */}
             {pendingRequests.length > 0 && (
               <div className="friend-requests-section">
                 <div className="requests-header">好友请求 ({pendingCount})</div>
@@ -591,7 +593,6 @@ const handleSelectConversation = async (conv) => {
               </div>
             )}
 
-            {/* 已有好友 */}
             {friends.length === 0 && pendingRequests.length === 0 ? (
               <div className="empty-state">
                 <p>暂无好友</p>
@@ -664,14 +665,12 @@ const handleSelectConversation = async (conv) => {
                   <span className="user-bio">{u.bio || ''}</span>
                 </div>
                 <div className="discover-actions">
-                  {/* 关注按钮 */}
                   <button
                     className={`follow-btn ${u.isFollowing ? 'following' : ''}`}
                     onClick={() => handleToggleFollow(u._id, u.isFollowing)}
                   >
                     {u.isFollowing ? '已关注' : '关注'}
                   </button>
-                  {/* 好友按钮 */}
                   {u.friendStatus === 'accepted' ? (
                     <span className="already-friend">好友</span>
                   ) : u.friendStatus === 'pending_sent' ? (
@@ -733,12 +732,32 @@ const handleSelectConversation = async (conv) => {
               ) : (
                 chatMessages.map(msg => {
                   const isOwn = msg.sender?._id === user?._id || msg.sender === user?._id;
+                  const senderAvatar = isOwn
+                    ? getAvatar(user?.avatar, user?.username)
+                    : getAvatar(selectedChat.friend?.avatar, selectedChat.friend?.username);
+                  const senderName = isOwn ? user?.username : selectedChat.friend?.username;
                   return (
                     <div key={msg._id} className={`message ${isOwn ? 'own' : ''}`}>
+                      {!isOwn && (
+                        <img
+                          src={senderAvatar}
+                          alt={senderName}
+                          className="message-avatar"
+                          onError={(e) => { e.target.src = getAvatar('', senderName); }}
+                        />
+                      )}
                       <div className="message-bubble">
                         <p style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</p>
                         <span className="message-time">{formatTime(msg.createdAt)}</span>
                       </div>
+                      {isOwn && (
+                        <img
+                          src={senderAvatar}
+                          alt={senderName}
+                          className="message-avatar"
+                          onError={(e) => { e.target.src = getAvatar('', senderName); }}
+                        />
+                      )}
                     </div>
                   );
                 })
@@ -807,7 +826,6 @@ const handleSelectConversation = async (conv) => {
               </div>
             </div>
 
-            {/* 广播历史 */}
             {broadcastHistory.length > 0 && (
               <div className="broadcast-history">
                 <div className="broadcast-history-header">历史广播</div>
@@ -868,11 +886,11 @@ const handleSelectConversation = async (conv) => {
                 <div className="empty-state"><p>输入关键词搜索用户</p></div>
               )}
             </div>
-            <button className="modal-close-btn" onClick={() => { 
-              setShowAddFriend(false); 
-              document.body.style.overflow = ''; // 加这行
-              setSearchQuery(''); 
-              setSearchResults([]); 
+            <button className="modal-close-btn" onClick={() => {
+              setShowAddFriend(false);
+              document.body.style.overflow = '';
+              setSearchQuery('');
+              setSearchResults([]);
             }}>
               关闭
             </button>

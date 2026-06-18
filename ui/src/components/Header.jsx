@@ -50,7 +50,7 @@ export default function Header() {
         // ★ 通过 WebSocket 实时监听新消息更新未读数（替代30秒轮询）★
         const token = localStorage.getItem('token');
         if (token) {
-            const socket = io(import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000', {
+            const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
                 transports: ['websocket', 'polling'],
                 reconnection: true,
                 reconnectionAttempts: 5,

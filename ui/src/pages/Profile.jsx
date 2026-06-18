@@ -89,10 +89,12 @@ export default function Profile() {
   if (!authUser) return <div className="profile-tip">请先登录</div>;
   if (!user) return <div className="profile-tip">加载中...</div>;
 
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
   const avatarSrc = previewAvatar || 
-    (user.avatar && user.avatar.startsWith('/uploads')
-        ? `http://localhost:3000${user.avatar}`
-        : user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff`);
+      (user.avatar && user.avatar.startsWith('/uploads')
+          ? `${BASE_URL}${user.avatar}`
+          : user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=f97316&color=fff`);
 
   return (
     <div className="profile-container">
